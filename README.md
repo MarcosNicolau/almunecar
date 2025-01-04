@@ -3,7 +3,9 @@
 > [!Warning]
 > This library is a work in progress
 
-Cryptography library in c that aims to have a very simple codebase easy to understand with an intuitive API. The goal of this library is not to be used at prod environments but provide implementations for the most basic crypto protocols in the simplest way for educational purposes.
+[Almunecar](https://en.wikipedia.org/wiki/Almu%C3%B1%C3%A9car) is a cryptography library written in C, designed with simplicity in mind. It features a simple straightforward codebase and an intuitive API, making it accessible and easy to understand.
+
+The primary goal of this library is not production use, but rather to provide clear and concise implementations of fundamental cryptographic protocols. It's an ideal resource for learning and exploring cryptographic concepts in a practical way.
 
 ### Libs
 
