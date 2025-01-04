@@ -26,7 +26,7 @@ Glossary:
 | [pcs](./libs/pcs/)                         | KZG                                    | 📝     |
 
 > [!NOTE]
-> This is just an initial roadmap to define the scope of the lib. They are not definitive and may vary in the future and as we explore.
+> This is just an initial roadmap to define the scope of the lib. They are not definitive and may vary in the future as we explore and work.
 
 ---
 
