@@ -7,7 +7,7 @@
 
 The primary goal of this library is not production use, but rather to provide clear and concise implementations of fundamental cryptographic protocols. It's an ideal resource for learning and exploring cryptographic concepts in a practical way.
 
-### Libs
+## Libs
 
 Glossary:
 
