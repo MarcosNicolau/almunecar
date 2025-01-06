@@ -1,5 +1,5 @@
-#ifndef INCLUDE_TEST_H
-#define INCLUDE_TEST_H
+#ifndef TEST_H
+#define TEST_H
 #define TESTING
 #define RED "\x1B[31m"
 #define GRN "\x1B[32m"

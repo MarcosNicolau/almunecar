@@ -65,7 +65,6 @@
     NAME##_overflow_op NAME##_overflow_add(NAME a, NAME b)                          \
     {                                                                               \
         uint64_t carry = 0;                                                         \
-        uint64_t result[WORDS];                                                     \
         NAME##_overflow_op op;                                                      \
         for (int i = 0; i < WORDS; i++)                                             \
         {                                                                           \
@@ -292,7 +291,6 @@
                                                                                    \
         int shift = a_bits - b_bits;                                               \
         NAME shift_copy = NAME##_shl(b, shift);                                    \
-        int i = 0;                                                                 \
         while (1)                                                                  \
         {                                                                          \
             /* rem >= shift_copy */                                                \
@@ -306,7 +304,6 @@
                 break;                                                             \
             shift -= 1;                                                            \
             shift_copy = NAME##_shr(shift_copy, 1);                                \
-            i++;                                                                   \
         }                                                                          \
                                                                                    \
         return (NAME##_div_op){.quot = quot, .rem = rem};                          \
@@ -330,7 +327,8 @@
     NAME NAME##_from_dec_string(char *str)                                                      \
     {                                                                                           \
         NAME result = NAME##_zero();                                                            \
-        for (int i = 0; i < strlen(str); i++)                                                   \
+        int len = strlen(str);                                                                  \
+        for (int i = 0; i < len; i++)                                                           \
         {                                                                                       \
             uint64_t digit = str[i] - '0';                                                      \
             NAME##_overflow_op mul = NAME##_overflow_mul(result, NAME##_from_u64(10));          \

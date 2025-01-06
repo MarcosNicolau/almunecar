@@ -1,5 +1,5 @@
-#include "./u256.h"
-#include "../../test/test.h"
+#include <primitive-types/u256.h>
+#include <utils/test.h>
 #include <string.h>
 
 void test_u256_overflow_add()
@@ -167,7 +167,7 @@ void test_u256_to_string()
     assert_that(strcmp(result, expected_result) == 0);
 }
 
-int main(int argc, char **argv)
+int main()
 {
     BEGIN_TEST();
     test(test_u256_overflow_add);
