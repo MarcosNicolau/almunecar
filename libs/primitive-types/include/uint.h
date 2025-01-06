@@ -430,7 +430,7 @@
         printf("[");                           \
         for (int i = 0; i < WORDS; i++)        \
         {                                      \
-            printf("%llu", a.parts[i]);        \
+            printf("%lu", a.parts[i]);         \
             if (i != WORDS - 1)                \
                 printf(",");                   \
         }                                      \
