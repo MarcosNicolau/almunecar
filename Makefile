@@ -47,9 +47,10 @@ test: build ## Run test for all libs. To run only the tests of a specific lib ru
 	done
 
 test_%: build $(TESTS_BUILD_DIR)
-	@for test in libs/$*/tests/*.c; do \
-		$(CC) $(CFLAGS) -I$(INCLUDE_BUILD_DIR) -L$(LIB_BUILD_DIR) -l$* -o $(BUILD_DIR)/tests/$$(basename $$test .c) $$test; \
-		LD_LIBRARY_PATH=$(LIB_BUILD_DIR) $(BUILD_DIR)/tests/$$(basename $$test .c); \
+	@for test in libs/$*/$(TEST_DIR)/*.c; do \
+		mkdir -p $(TESTS_BUILD_DIR)/$*; \
+		$(CC) $(CFLAGS) -I$(INCLUDE_BUILD_DIR) -L$(LIB_BUILD_DIR) -l$* -o $(TESTS_BUILD_DIR)/$*/$$(basename $$test .c) $$test; \
+		LD_LIBRARY_PATH=$(LIB_BUILD_DIR) $(TESTS_BUILD_DIR)/$*/$$(basename $$test .c); \
 	done
 
 clean: ## Clean build file
