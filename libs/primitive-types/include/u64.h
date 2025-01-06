@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 
 // Result of u64 operations with wrapped result in case of overflow and a boolean indicating if overflow occurred
 // - res: returns the wrapped value in case of overflow
