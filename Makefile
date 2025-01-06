@@ -47,7 +47,7 @@ test: build ## Run test for all libs. To run only the tests of a specific lib ru
 	done
 
 test_%: build $(TESTS_BUILD_DIR)
-	@$(CC) $(CFLAGS) -I$(INCLUDE_BUILD_DIR) -L$(LIB_BUILD_DIR) -l$* \
+	@$(CC) $(CFLAGS) -I$(INCLUDE_BUILD_DIR) -L$(LIB_BUILD_DIR) $(patsubst %, -l%, $(LIBS)) \
 		-o $(BUILD_DIR)/tests/$* libs/$*/$(TEST_DIR)/*.c
 	@LD_LIBRARY_PATH=$(LIB_BUILD_DIR) $(BUILD_DIR)/tests/$*
 
