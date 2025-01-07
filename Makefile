@@ -17,6 +17,11 @@ PREFIX = /usr/local
 INSTALL_LIB_DIR = $(PREFIX)/lib
 INSTALL_INCLUDE_DIR = $(PREFIX)/include/$(PROJECT_NAME)
 
+# CLI
+CLI_SRC = cli/almunecar.c 
+CLI_OUTPUT = $(BUILD_DIR)/$(PROJECT_NAME)
+CLI_OUTPUT_INSTALL = $(HOME)/.local/bin/$(PROJECT_NAME)
+
 # Compiler settings
 CC = gcc
 CFLAGS = -fPIC -Wall -Wextra -std=c99
@@ -89,3 +94,14 @@ fmt: ## Formats the code
 
 clean: ## Clean build file
 	rm -rf $(BUILD_DIR)
+
+__CLI__:
+cli_build: build ## Build cli program
+	@$(CC) $(CFLAGS) -I$(INCLUDE_BUILD_DIR) -L$(LIB_BUILD_DIR) \
+		$(CLI_SRC) $(patsubst %, -l%, $(LIBS)) -o $(CLI_OUTPUT)
+
+cli_install: cli_build ## Build cli program and install it globally in your system
+	cp $(CLI_OUTPUT) $(CLI_OUTPUT_INSTALL)
+
+cli_uninstall: ## Uninstall cli program from your system
+	rm $(CLI_OUTPUT_INSTALL)
