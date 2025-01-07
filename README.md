@@ -55,6 +55,47 @@ To uninstall:
 make cli_uninstall
 ```
 
+## Developers
+
+To start developing, you'll need to compile the libs:
+
+```shell
+make build
+```
+
+Whenever you make a change on a lib, you'll need to re-build to see its effects.
+
+To build and run the cli program:
+
+```shell
+make cli_build
+./build/almunecar --help
+```
+
+To run tests:
+
+```shell
+make test
+```
+
+To run test of a specific lib:
+
+```shell
+make test_<LIB_NAME>
+```
+
+for example:
+
+```shell
+make test_primitive-types
+```
+
+See all available commands:
+
+```shell
+make help
+```
+
 ---
 
 ### References
