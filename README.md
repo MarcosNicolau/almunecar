@@ -28,6 +28,33 @@ Glossary:
 > [!NOTE]
 > This is just an initial roadmap to define the scope of the lib. They are not definitive and may vary in the future as we explore and work.
 
+## Installation
+
+To install the library globally in your system run:
+
+```shell
+make install
+```
+
+To uninstall:
+
+```shell
+make uninstall
+```
+
+To install the CLI program in your system run:
+
+```shell
+make cli_install
+almunecar --help
+```
+
+To uninstall:
+
+```shell
+make cli_uninstall
+```
+
 ---
 
 ### References
