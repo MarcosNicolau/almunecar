@@ -87,15 +87,21 @@ test_%: build $(TESTS_BUILD_DIR)
 	done
 
 check_fmt: ## Checks formatting and outputs the diff
-	@./scripts/fmt.sh
+	@./scripts/fmt.sh libs
 
 fmt: ## Formats the code
-	@./scripts/fmt.sh --fix
+	@./scripts/fmt.sh libs --fix
 
 clean: ## Clean build file
 	rm -rf $(BUILD_DIR)
 
 __CLI__:
+cli_check_fmt: ## Checks formatting for cli program
+	@./scripts/fmt.sh cli
+
+cli_fmt: ## Formats the code
+	@./scripts/fmt.sh cli --fix
+
 cli_build: build ## Build cli program
 	@$(CC) $(CFLAGS) -I$(INCLUDE_BUILD_DIR) -L$(LIB_BUILD_DIR) \
 		$(CLI_SRC) $(patsubst %, -l%, $(LIBS)) -o $(CLI_OUTPUT)
