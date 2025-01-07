@@ -38,6 +38,11 @@ void test_assert(int expression, char *file, int line)
     if (expression == 0)
     {
         printf("%sfailed%s at %s:%d: \n", RED, RESET, file, line);
+        char *ci = getenv("CI");
+        if (ci != NULL && strcmp(ci, "true") == 0)
+        {
+            exit(1);
+        }
         longjmp(env, 1);
     }
 }

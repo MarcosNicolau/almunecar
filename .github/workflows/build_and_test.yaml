@@ -15,4 +15,4 @@ jobs:
       - name: "Compile"
         run: make build
       - name: "Run tests"
-        run: make test
+        run: make test CI=true
