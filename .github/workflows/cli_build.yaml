@@ -1,4 +1,4 @@
-name: "LIBS"
+name: "CLI"
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: ["*"]
     paths:
-      - "libs/**"
+      - "cli/**"
 
 jobs:
   compile_and_test:
@@ -15,8 +15,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: "Check format"
-        run: make check_fmt
+        run: make cli_check_fmt
       - name: "Compile"
-        run: make build
-      - name: "Run tests"
-        run: make test FAIL_FAST=true
+        run: make cli_build

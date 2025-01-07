@@ -1,10 +1,10 @@
 #!/bin/bash
 
 FORMATTER="clang-format"
-ROOT_DIR="libs"
+ROOT_DIR=$1
 EXIT_CODE=0
 
-if [ "$1" == "--fix" ]; then
+if [ "$2" == "--fix" ]; then
     echo "Auto-fixing formatting issues..."
     for file in $(find "$ROOT_DIR" -type f \( -name '*.c' -o -name '*.h' \)); do
         echo "Formatting $file..."
