@@ -5,6 +5,8 @@ on:
     branches: [main]
   pull_request:
     branches: ["*"]
+    paths:
+      - "cli/**"
 
 jobs:
   compile_and_test:
