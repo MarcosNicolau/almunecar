@@ -1,9 +1,7 @@
 #include <primitive-types/u256.h>
 
-int main(int argc, char **argv)
-{
-    if (argc < 3)
-    {
+int main(int argc, char **argv) {
+    if (argc < 3) {
         printf("You must provide two decimal strings.");
         return 1;
     }
