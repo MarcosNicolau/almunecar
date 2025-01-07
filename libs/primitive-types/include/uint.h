@@ -1,9 +1,10 @@
 #ifndef UINT_H
 #define UINT_H
 
-#include <string.h>
-#include "u64.h"
 #include <assert.h>
+#include <string.h>
+
+#include "u64.h"
 
 /**
  * Defines a new unsigned integer data type.
@@ -19,8 +20,7 @@
  *       } u256;
  */
 #define DEFINE_UINT_DATA_TYPE(NAME, WORDS) \
-    typedef struct                         \
-    {                                      \
+    typedef struct {                       \
         uint64_t parts[WORDS];             \
     } NAME;
 
@@ -35,8 +35,7 @@
  *     occurred (1 if true, 0 if false).                                 \
  */
 #define DEFINE_UINT_OVERFLOW_OP(NAME) \
-    typedef struct                    \
-    {                                 \
+    typedef struct {                  \
         NAME res;                     \
         int overflow;                 \
     } NAME##_overflow_op;
@@ -50,8 +49,7 @@
  *                                                                        \
  */
 #define DEFINE_UINT_DIV_OP(NAME) \
-    typedef struct               \
-    {                            \
+    typedef struct {             \
         NAME quot;               \
         NAME rem;                \
     } NAME##_div_op;
@@ -61,20 +59,20 @@
  *
  * Returns a structure containing the result and an overflow flag.
  */
-#define DEFINE_UINT_OVERFLOW_ADD(NAME, WORDS)                                       \
-    NAME##_overflow_op NAME##_overflow_add(NAME a, NAME b)                          \
-    {                                                                               \
-        uint64_t carry = 0;                                                         \
-        NAME##_overflow_op op;                                                      \
-        for (int i = 0; i < WORDS; i++)                                             \
-        {                                                                           \
-            u64_overflow_op addition = u64_overflow_add(a.parts[i], b.parts[i]);    \
-            u64_overflow_op carry_addition = u64_overflow_add(addition.res, carry); \
-            op.res.parts[i] = carry_addition.res;                                   \
-            carry = addition.overflow + carry_addition.overflow;                    \
-        }                                                                           \
-        op.overflow = (carry > 0);                                                  \
-        return op;                                                                  \
+#define DEFINE_UINT_OVERFLOW_ADD(NAME, WORDS)                    \
+    NAME##_overflow_op NAME##_overflow_add(NAME a, NAME b) {     \
+        uint64_t carry = 0;                                      \
+        NAME##_overflow_op op;                                   \
+        for (int i = 0; i < WORDS; i++) {                        \
+            u64_overflow_op addition =                           \
+                u64_overflow_add(a.parts[i], b.parts[i]);        \
+            u64_overflow_op carry_addition =                     \
+                u64_overflow_add(addition.res, carry);           \
+            op.res.parts[i] = carry_addition.res;                \
+            carry = addition.overflow + carry_addition.overflow; \
+        }                                                        \
+        op.overflow = (carry > 0);                               \
+        return op;                                               \
     }
 
 /**                                                                         \
@@ -83,12 +81,10 @@
  * Returns a structure containing the result and an overflow flag.          \
  */                                                                         \
 #define DEFINE_UINT_OVERFLOW_SUB(NAME, WORDS)                               \
-    NAME##_overflow_op NAME##_overflow_sub(NAME a, NAME b)                  \
-    {                                                                       \
+    NAME##_overflow_op NAME##_overflow_sub(NAME a, NAME b) {                \
         uint64_t carry = 0;                                                 \
         NAME##_overflow_op op;                                              \
-        for (int i = 0; i < WORDS; i++)                                     \
-        {                                                                   \
+        for (int i = 0; i < WORDS; i++) {                                   \
             u64_overflow_op sub = u64_overflow_sub(a.parts[i], b.parts[i]); \
             u64_overflow_op carry_sub = u64_overflow_sub(sub.res, carry);   \
             op.res.parts[i] = carry_sub.res;                                \
@@ -104,8 +100,7 @@
  * Returns the result of `a & b`.
  */
 #define DEFINE_UINT_BITADD(NAME, WORDS)                \
-    NAME NAME##_bitand(NAME a, NAME b)                 \
-    {                                                  \
+    NAME NAME##_bitand(NAME a, NAME b) {               \
         NAME result = NAME##_zero();                   \
         for (int i = 0; i < WORDS; i++)                \
             result.parts[i] = a.parts[i] & b.parts[i]; \
@@ -118,8 +113,7 @@
  * Returns the result of `a | b`.
  */
 #define DEFINE_UINT_BITOR(NAME, WORDS)                 \
-    NAME NAME##_bitor(NAME a, NAME b)                  \
-    {                                                  \
+    NAME NAME##_bitor(NAME a, NAME b) {                \
         NAME result = NAME##_zero();                   \
         for (int i = 0; i < WORDS; i++)                \
             result.parts[i] = a.parts[i] | b.parts[i]; \
@@ -132,223 +126,201 @@
  * Returns the result of `a ^ b`.                      \
  */                                                    \
 #define DEFINE_UINT_BITXOR(NAME, WORDS)                \
-    NAME NAME##_bitxor(NAME a, NAME b)                 \
-    {                                                  \
+    NAME NAME##_bitxor(NAME a, NAME b) {               \
         NAME result = NAME##_zero();                   \
         for (int i = 0; i < WORDS; i++)                \
             result.parts[i] = a.parts[i] ^ b.parts[i]; \
         return result;                                 \
     }
-/**                                        \
- * Performs a bitwise NOT operation.       \
- *                                         \
- * Returns the result of `~a`.             \
- */                                        \
-#define DEFINE_UINT_BITNOT(NAME, WORDS)    \
-    NAME NAME##_bitnot(NAME a)             \
-    {                                      \
-        NAME result = NAME##_zero();       \
-        for (int i = 0; i < WORDS; i++)    \
-            result.parts[i] = ~a.parts[i]; \
-        return result;                     \
+/**                                                                    \
+ * Performs a bitwise NOT operation.                                   \
+ *                                                                     \
+ * Returns the result of `~a`.                                         \
+ */                                                                    \
+#define DEFINE_UINT_BITNOT(NAME, WORDS)                                \
+    NAME NAME##_bitnot(NAME a) {                                       \
+        NAME result = NAME##_zero();                                   \
+        for (int i = 0; i < WORDS; i++) result.parts[i] = ~a.parts[i]; \
+        return result;                                                 \
     }
-/**                                                                                                       \
- * Multiplies two unsigned integers and detects overflow.                                                \
+/** \
+ * Multiplies two unsigned integers and detects overflow. \
  *                                                                                                       \
- * Returns a structure containing the result and an overflow flag.                                       \
+ * Returns a structure containing the result and an overflow flag. \
  */
-#define DEFINE_UINT_OVERFLOW_MUL(NAME, WORDS)                                                                 \
-    NAME##_overflow_op NAME##_overflow_mul(NAME a, NAME b)                                                    \
-    {                                                                                                         \
-        uint64_t result[WORDS * 2];                                                                           \
-        for (int i = 0; i < WORDS * 2; i++)                                                                   \
-            result[i] = 0;                                                                                    \
-        for (int i = 0; i < WORDS; i++)                                                                       \
-        {                                                                                                     \
-            uint64_t carry = 0;                                                                               \
-            for (int j = 0; j < WORDS; j++)                                                                   \
-            {                                                                                                 \
-                /* calculate result */                                                                        \
-                u64_mul_op mul = u64_mul(a.parts[j], b.parts[i]);                                             \
-                uint64_t current = result[i + j];                                                             \
-                u64_overflow_op addition = u64_overflow_add(mul.res, current);                                \
-                result[i + j] = addition.res;                                                                 \
-                /* calculate carry */                                                                         \
-                uint64_t carry_current = result[i + j + 1];                                                   \
-                u64_overflow_op carry_addition = u64_overflow_add(mul.carry + addition.overflow, carry);      \
-                u64_overflow_op current_carry_addition = u64_overflow_add(carry_addition.res, carry_current); \
-                result[i + j + 1] = current_carry_addition.res;                                               \
-                carry = carry_addition.overflow | current_carry_addition.overflow;                            \
-            }                                                                                                 \
-        }                                                                                                     \
-        int overflow = 0;                                                                                     \
-        for (int i = 4; i < WORDS * 2; i++)                                                                   \
-        {                                                                                                     \
-            if (result[i] != 0)                                                                               \
-            {                                                                                                 \
-                overflow = 1;                                                                                 \
-                break;                                                                                        \
-            }                                                                                                 \
-        }                                                                                                     \
-        NAME##_overflow_op op;                                                                                \
-        for (int i = 0; i < WORDS; i++)                                                                       \
-            op.res.parts[i] = result[i];                                                                      \
-        op.overflow = overflow;                                                                               \
-        return op;                                                                                            \
+#define DEFINE_UINT_OVERFLOW_MUL(NAME, WORDS)                                  \
+    NAME##_overflow_op NAME##_overflow_mul(NAME a, NAME b) {                   \
+        uint64_t result[WORDS * 2];                                            \
+        for (int i = 0; i < WORDS * 2; i++) result[i] = 0;                     \
+        for (int i = 0; i < WORDS; i++) {                                      \
+            uint64_t carry = 0;                                                \
+            for (int j = 0; j < WORDS; j++) {                                  \
+                /* calculate result */                                         \
+                u64_mul_op mul = u64_mul(a.parts[j], b.parts[i]);              \
+                uint64_t current = result[i + j];                              \
+                u64_overflow_op addition = u64_overflow_add(mul.res, current); \
+                result[i + j] = addition.res;                                  \
+                /* calculate carry */                                          \
+                uint64_t carry_current = result[i + j + 1];                    \
+                u64_overflow_op carry_addition =                               \
+                    u64_overflow_add(mul.carry + addition.overflow, carry);    \
+                u64_overflow_op current_carry_addition =                       \
+                    u64_overflow_add(carry_addition.res, carry_current);       \
+                result[i + j + 1] = current_carry_addition.res;                \
+                carry =                                                        \
+                    carry_addition.overflow | current_carry_addition.overflow; \
+            }                                                                  \
+        }                                                                      \
+        int overflow = 0;                                                      \
+        for (int i = 4; i < WORDS * 2; i++) {                                  \
+            if (result[i] != 0) {                                              \
+                overflow = 1;                                                  \
+                break;                                                         \
+            }                                                                  \
+        }                                                                      \
+        NAME##_overflow_op op;                                                 \
+        for (int i = 0; i < WORDS; i++) op.res.parts[i] = result[i];           \
+        op.overflow = overflow;                                                \
+        return op;                                                             \
     }
 
-/**                                                                                                      \
- * Calculates the number of significant bits in the unsigned integer.                                    \
+/** \
+ * Calculates the number of significant bits in the unsigned integer. \
  *                                                                                                       \
- * Returns the number of bits required to represent `a`.                                                 \
+ * Returns the number of bits required to represent `a`. \
  */
-#define DEFINE_UINT_BITS(NAME, WORDS)                                                \
-    int NAME##_bits(NAME a)                                                          \
-    {                                                                                \
-        for (int i = 1; i < WORDS; i++)                                              \
-        {                                                                            \
-            if (a.parts[WORDS - i] > 0)                                              \
-            {                                                                        \
-                return 64 * (WORDS - i + 1) - u64_leading_zeros(a.parts[WORDS - i]); \
-            }                                                                        \
-        }                                                                            \
-        return 64 - u64_leading_zeros(a.parts[0]);                                   \
+#define DEFINE_UINT_BITS(NAME, WORDS)                         \
+    int NAME##_bits(NAME a) {                                 \
+        for (int i = 1; i < WORDS; i++) {                     \
+            if (a.parts[WORDS - i] > 0) {                     \
+                return 64 * (WORDS - i + 1) -                 \
+                       u64_leading_zeros(a.parts[WORDS - i]); \
+            }                                                 \
+        }                                                     \
+        return 64 - u64_leading_zeros(a.parts[0]);            \
     }
 
-/**                                                                                                      \
- * Shifts the unsigned integer left by the specified number of bits.                                     \
+/** \
+ * Shifts the unsigned integer left by the specified number of bits. \
  *                                                                                                       \
- * Returns the result of shifting `a` by `shift` bits to the left.                                       \
+ * Returns the result of shifting `a` by `shift` bits to the left. \
  */
-#define DEFINE_UINT_SHL(NAME, WORDS)                                                 \
-    NAME NAME##_shl(NAME a, int shift)                                               \
-    {                                                                                \
-        NAME result = NAME##_zero();                                                 \
-        int shift_start = shift / 64;                                                \
-        int shift_mod = shift % 64;                                                  \
-                                                                                     \
-        for (int i = shift_start; i < WORDS; i++)                                    \
-        {                                                                            \
-            result.parts[i] = a.parts[i - shift_start] << shift_mod;                 \
-        }                                                                            \
-                                                                                     \
-        /* calculate carry */                                                        \
-        if (shift_mod > 0)                                                           \
-        {                                                                            \
-            for (int i = shift_start + 1; i < WORDS; i++)                            \
-            {                                                                        \
-                result.parts[i] += a.parts[i - shift_start - 1] >> (64 - shift_mod); \
-            }                                                                        \
-        }                                                                            \
-                                                                                     \
-        return result;                                                               \
+#define DEFINE_UINT_SHL(NAME, WORDS)                                  \
+    NAME NAME##_shl(NAME a, int shift) {                              \
+        NAME result = NAME##_zero();                                  \
+        int shift_start = shift / 64;                                 \
+        int shift_mod = shift % 64;                                   \
+                                                                      \
+        for (int i = shift_start; i < WORDS; i++) {                   \
+            result.parts[i] = a.parts[i - shift_start] << shift_mod;  \
+        }                                                             \
+                                                                      \
+        /* calculate carry */                                         \
+        if (shift_mod > 0) {                                          \
+            for (int i = shift_start + 1; i < WORDS; i++) {           \
+                result.parts[i] +=                                    \
+                    a.parts[i - shift_start - 1] >> (64 - shift_mod); \
+            }                                                         \
+        }                                                             \
+                                                                      \
+        return result;                                                \
     }
 
-/**                                                                                                      \
- * Shifts the unsigned integer right by the specified number of bits.                                    \
+/** \
+ * Shifts the unsigned integer right by the specified number of bits. \
  *                                                                                                       \
- * Returns the result of shifting `a` by `shift` bits to the right.                                      \
+ * Returns the result of shifting `a` by `shift` bits to the right. \
  */
-#define DEFINE_UINT_SHR(NAME, WORDS)                                                 \
-    NAME NAME##_shr(NAME a, int shift)                                               \
-    {                                                                                \
-        NAME result = NAME##_zero();                                                 \
-        int shift_start = shift / 64;                                                \
-        int shift_mod = shift % 64;                                                  \
-                                                                                     \
-        for (int i = shift_start; i < WORDS; i++)                                    \
-        {                                                                            \
-            result.parts[i - shift_start] = a.parts[i] >> shift_mod;                 \
-        }                                                                            \
-                                                                                     \
-        /* calculate carry */                                                        \
-        if (shift_mod > 0)                                                           \
-        {                                                                            \
-            for (int i = shift_start + 1; i < WORDS; i++)                            \
-            {                                                                        \
-                result.parts[i - shift_start - 1] += a.parts[i] << (64 - shift_mod); \
-            }                                                                        \
-        }                                                                            \
-                                                                                     \
-        return result;                                                               \
+#define DEFINE_UINT_SHR(NAME, WORDS)                                      \
+    NAME NAME##_shr(NAME a, int shift) {                                  \
+        NAME result = NAME##_zero();                                      \
+        int shift_start = shift / 64;                                     \
+        int shift_mod = shift % 64;                                       \
+                                                                          \
+        for (int i = shift_start; i < WORDS; i++) {                       \
+            result.parts[i - shift_start] = a.parts[i] >> shift_mod;      \
+        }                                                                 \
+                                                                          \
+        /* calculate carry */                                             \
+        if (shift_mod > 0) {                                              \
+            for (int i = shift_start + 1; i < WORDS; i++) {               \
+                result.parts[i - shift_start - 1] += a.parts[i]           \
+                                                     << (64 - shift_mod); \
+            }                                                             \
+        }                                                                 \
+                                                                          \
+        return result;                                                    \
     }
 
-/**                                                                                                      \
- * Divides one unsigned integer by another, returning the quotient and remainder.                        \
+/** \
+ * Divides one unsigned integer by another, returning the quotient and
+ * remainder.                        \
  *                                                                                                       \
- * Returns a structure containing the quotient and remainder of `a / b`.                                 \
+ * Returns a structure containing the quotient and remainder of `a / b`. \
  */
-#define DEFINE_UINT_DIV_MOD(NAME, WORDS)                                           \
-    NAME##_div_op NAME##_divmod(NAME a, NAME b)                                    \
-    {                                                                              \
-        int a_bits = NAME##_bits(a);                                               \
-        int b_bits = NAME##_bits(b);                                               \
-        NAME quot = NAME##_zero();                                                 \
-        NAME rem = a;                                                              \
-        assert(b_bits != 0);                                                       \
-        if (a_bits < b_bits)                                                       \
-            return (NAME##_div_op){.quot = quot, .rem = rem};                      \
-                                                                                   \
-        int shift = a_bits - b_bits;                                               \
-        NAME shift_copy = NAME##_shl(b, shift);                                    \
-        while (1)                                                                  \
-        {                                                                          \
-            /* rem >= shift_copy */                                                \
-            if (NAME##_cmp(rem, shift_copy) >= 0)                                  \
-            {                                                                      \
-                quot.parts[shift / 64] |= ((uint64_t)1 << (uint64_t)(shift % 64)); \
-                NAME##_overflow_op sub = NAME##_overflow_sub(rem, shift_copy);     \
-                rem = sub.res;                                                     \
-            }                                                                      \
-            if (shift == 0)                                                        \
-                break;                                                             \
-            shift -= 1;                                                            \
-            shift_copy = NAME##_shr(shift_copy, 1);                                \
-        }                                                                          \
-                                                                                   \
-        return (NAME##_div_op){.quot = quot, .rem = rem};                          \
+#define DEFINE_UINT_DIV_MOD(NAME, WORDS)                                       \
+    NAME##_div_op NAME##_divmod(NAME a, NAME b) {                              \
+        int a_bits = NAME##_bits(a);                                           \
+        int b_bits = NAME##_bits(b);                                           \
+        NAME quot = NAME##_zero();                                             \
+        NAME rem = a;                                                          \
+        assert(b_bits != 0);                                                   \
+        if (a_bits < b_bits) return (NAME##_div_op){.quot = quot, .rem = rem}; \
+                                                                               \
+        int shift = a_bits - b_bits;                                           \
+        NAME shift_copy = NAME##_shl(b, shift);                                \
+        while (1) {                                                            \
+            /* rem >= shift_copy */                                            \
+            if (NAME##_cmp(rem, shift_copy) >= 0) {                            \
+                quot.parts[shift / 64] |=                                      \
+                    ((uint64_t)1 << (uint64_t)(shift % 64));                   \
+                NAME##_overflow_op sub = NAME##_overflow_sub(rem, shift_copy); \
+                rem = sub.res;                                                 \
+            }                                                                  \
+            if (shift == 0) break;                                             \
+            shift -= 1;                                                        \
+            shift_copy = NAME##_shr(shift_copy, 1);                            \
+        }                                                                      \
+                                                                               \
+        return (NAME##_div_op){.quot = quot, .rem = rem};                      \
     }
 
-#define DEFINE_UINT_ZERO(NAME, WORDS)   \
-    NAME NAME##_zero()                  \
-    {                                   \
-        NAME result;                    \
-        for (int i = 0; i < WORDS; i++) \
-            result.parts[i] = 0;        \
-        return result;                  \
+#define DEFINE_UINT_ZERO(NAME, WORDS)                        \
+    NAME NAME##_zero() {                                     \
+        NAME result;                                         \
+        for (int i = 0; i < WORDS; i++) result.parts[i] = 0; \
+        return result;                                       \
     }
 
-/**                                                                                                      \
- * Parses an unsigned integer from a decimal string.                                                    \
+/** \
+ * Parses an unsigned integer from a decimal string. \
  *                                                                                                       \
- * Returns the unsigned integer represented by the string `str`.                                        \
+ * Returns the unsigned integer represented by the string `str`. \
  */
-#define DEFINE_UINT_FROM_DEC_STRING(NAME, WORDS)                                                \
-    NAME NAME##_from_dec_string(char *str)                                                      \
-    {                                                                                           \
-        NAME result = NAME##_zero();                                                            \
-        int len = strlen(str);                                                                  \
-        for (int i = 0; i < len; i++)                                                           \
-        {                                                                                       \
-            uint64_t digit = str[i] - '0';                                                      \
-            NAME##_overflow_op mul = NAME##_overflow_mul(result, NAME##_from_u64(10));          \
-            NAME##_overflow_op addition = NAME##_overflow_add(mul.res, NAME##_from_u64(digit)); \
-            result = addition.res;                                                              \
-        }                                                                                       \
-        return result;                                                                          \
+#define DEFINE_UINT_FROM_DEC_STRING(NAME, WORDS)                      \
+    NAME NAME##_from_dec_string(char *str) {                          \
+        NAME result = NAME##_zero();                                  \
+        int len = strlen(str);                                        \
+        for (int i = 0; i < len; i++) {                               \
+            uint64_t digit = str[i] - '0';                            \
+            NAME##_overflow_op mul =                                  \
+                NAME##_overflow_mul(result, NAME##_from_u64(10));     \
+            NAME##_overflow_op addition =                             \
+                NAME##_overflow_add(mul.res, NAME##_from_u64(digit)); \
+            result = addition.res;                                    \
+        }                                                             \
+        return result;                                                \
     }
 
 #define DEFINE_UINT_FROM_U64(NAME, WORDS) \
-    NAME NAME##_from_u64(uint64_t a)      \
-    {                                     \
+    NAME NAME##_from_u64(uint64_t a) {    \
         NAME result = NAME##_zero();      \
         result.parts[0] = a;              \
         return result;                    \
     }
 
 #define DEFINE_UINT_ONE(NAME, WORDS) \
-    NAME NAME##_one()                \
-    {                                \
+    NAME NAME##_one() {              \
         NAME result = NAME##_zero(); \
         result.parts[0] = 1;         \
         return result;               \
@@ -357,33 +329,32 @@
 /**
  * Converts the unsigned integer to its decimal string representation.
  *
- * Returns a heap allocated string representation of the unsigned integer, make sure to free the pointer after using it.
+ * Returns a heap allocated string representation of the unsigned integer, make
+ * sure to free the pointer after using it.
  */
-#define DEFINE_UINT_TO_STRING(NAME, WORDS)                                                                       \
-    char *NAME##_to_string(NAME a)                                                                               \
-    {                                                                                                            \
-        char *result = malloc(WORDS * 20 + 1); /* multiply by 20, since each part can take as much as 20 bytes*/ \
-        int i = WORDS * 20 - 1;                                                                                  \
-        NAME ten = NAME##_from_u64(10);                                                                          \
-        while (1)                                                                                                \
-        {                                                                                                        \
-            NAME##_div_op div = NAME##_divmod(a, ten);                                                           \
-            a = div.quot;                                                                                        \
-            int digit = div.rem.parts[0] + '0';                                                                  \
-            result[i] = digit;                                                                                   \
-            if (NAME##_is_zero(a))                                                                               \
-                break;                                                                                           \
-            i -= 1;                                                                                              \
-        }                                                                                                        \
-        char *dst = malloc(WORDS * 20 + 1 - i);                                                                  \
-        int k = 0;                                                                                               \
-        for (int j = i; j < WORDS * 20 + 1; j++)                                                                 \
-        {                                                                                                        \
-            dst[k] = result[i + k];                                                                              \
-            k++;                                                                                                 \
-        }                                                                                                        \
-        free(result);                                                                                            \
-        return dst;                                                                                              \
+#define DEFINE_UINT_TO_STRING(NAME, WORDS)                                 \
+    char *NAME##_to_string(NAME a) {                                       \
+        char *result =                                                     \
+            malloc(WORDS * 20 + 1); /* multiply by 20, since each part can \
+                                       take as much as 20 bytes*/          \
+        int i = WORDS * 20 - 1;                                            \
+        NAME ten = NAME##_from_u64(10);                                    \
+        while (1) {                                                        \
+            NAME##_div_op div = NAME##_divmod(a, ten);                     \
+            a = div.quot;                                                  \
+            int digit = div.rem.parts[0] + '0';                            \
+            result[i] = digit;                                             \
+            if (NAME##_is_zero(a)) break;                                  \
+            i -= 1;                                                        \
+        }                                                                  \
+        char *dst = malloc(WORDS * 20 + 1 - i);                            \
+        int k = 0;                                                         \
+        for (int j = i; j < WORDS * 20 + 1; j++) {                         \
+            dst[k] = result[i + k];                                        \
+            k++;                                                           \
+        }                                                                  \
+        free(result);                                                      \
+        return dst;                                                        \
     }
 
 /**
@@ -406,10 +377,8 @@
  * - Returns `1` if `a > b`
  */
 #define DEFINE_UINT_COMPARE(NAME, WORDS)         \
-    int NAME##_cmp(NAME a, NAME b)               \
-    {                                            \
-        for (int i = WORDS - 1; i >= 0; i--)     \
-        {                                        \
+    int NAME##_cmp(NAME a, NAME b) {             \
+        for (int i = WORDS - 1; i >= 0; i--) {   \
             uint64_t a_i = (uint64_t)a.parts[i]; \
             uint64_t b_i = (uint64_t)b.parts[i]; \
             if (a_i < b_i)                       \
@@ -425,14 +394,11 @@
  * `parts` array of the `NAME` structure.      \
  */                                            \
 #define DEFINE_UINT_RAW_PRINTLN(NAME, WORDS)   \
-    void NAME##_raw_println(NAME a)            \
-    {                                          \
+    void NAME##_raw_println(NAME a) {          \
         printf("[");                           \
-        for (int i = 0; i < WORDS; i++)        \
-        {                                      \
+        for (int i = 0; i < WORDS; i++) {      \
             printf("%lu", a.parts[i]);         \
-            if (i != WORDS - 1)                \
-                printf(",");                   \
+            if (i != WORDS - 1) printf(",");   \
         }                                      \
         printf("]\n");                         \
     }
@@ -441,8 +407,7 @@
  * Print the string representation of the structure followed by a newline. \
  */                                                                        \
 #define DEFINE_UINT_PRINTLN(NAME, WORDS)                                   \
-    void NAME##_println(NAME a)                                            \
-    {                                                                      \
+    void NAME##_println(NAME a) {                                          \
         char *str = NAME##_to_string(a);                                   \
         printf("%s\n", str);                                               \
         free(str);                                                         \
@@ -452,8 +417,7 @@
  * Print the string representation of the structure. \
  */                                                  \
 #define DEFINE_UINT_PRINT(NAME, WORDS)               \
-    void NAME##_print(NAME a)                        \
-    {                                                \
+    void NAME##_print(NAME a) {                      \
         char *str = NAME##_to_string(a);             \
         printf("%s\n", str);                         \
         free(str);                                   \
@@ -464,11 +428,8 @@
  * - 1 if `a` is zero.
  * - 0 otherwise.
  */
-#define DEFINE_UINT_IS_ZERO(NAME)                 \
-    int NAME##_is_zero(NAME a)                    \
-    {                                             \
-        return NAME##_cmp(a, NAME##_zero()) == 0; \
-    }
+#define DEFINE_UINT_IS_ZERO(NAME) \
+    int NAME##_is_zero(NAME a) { return NAME##_cmp(a, NAME##_zero()) == 0; }
 
 #define DEFINE_UINT(NAME, WORDS)             \
     DEFINE_UINT_DATA_TYPE(NAME, WORDS)       \
