@@ -20,7 +20,7 @@ void test_u256_overflow_add_with_overflow()
     u256_overflow_op result = u256_overflow_add(first, second);
     u256 expected_result = {{UINT64_MAX - 1, UINT64_MAX, UINT64_MAX, UINT64_MAX}};
 
-    assert_that(u256_cmp(result.res, expected_result) == 1);
+    assert_that(u256_cmp(result.res, expected_result) == 0);
     assert_that(result.overflow == 1);
 }
 
