@@ -9,6 +9,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define assert_that(expr) test_assert(expr, __FILE__, __LINE__)
 
@@ -34,8 +35,8 @@ static jmp_buf env;
 void test_assert(int expression, char *file, int line) {
     if (expression == 0) {
         printf("%sfailed%s at %s:%d: \n", RED, RESET, file, line);
-        char *ci = getenv("CI");
-        if (ci != NULL && strcmp(ci, "true") == 0) {
+        char *fail_fast = getenv("FAIL_FAST");
+        if (fail_fast != NULL && strcmp(fail_fast, "true") == 0) {
             exit(1);
         }
         longjmp(env, 1);

@@ -68,7 +68,8 @@ uninstall: ## Uninstalls library installation from your system
 	@rm -rf $(INSTALL_INCLUDE_DIR)
 
 
-test: build ## Run test for all libs. To run only the tests of a specific lib run do make_<LIB_NAME>, for example: make test_primitive-types.
+FAIL_FAST ?= false
+test: build ## Run test for all libs. To run only the tests of a specific lib run do make_<LIB_NAME>, for example: make test_primitive-types. To fail as soon as one test fails pass `FAIL_FAST=true`.
 	@for lib in $(LIBS); do \
 	 $(MAKE) test_$$lib; 	\
 	done
@@ -77,7 +78,7 @@ test_%: build $(TESTS_BUILD_DIR)
 	@for test in libs/$*/$(TEST_DIR)/*.c; do \
 		mkdir -p $(TESTS_BUILD_DIR)/$*; \
 		$(CC) $(CFLAGS) -I$(INCLUDE_BUILD_DIR) -o $(TESTS_BUILD_DIR)/$*/$$(basename $$test .c) $$test -L$(LIB_BUILD_DIR) -l$*; \
-		LD_LIBRARY_PATH=$(LIB_BUILD_DIR) $(TESTS_BUILD_DIR)/$*/$$(basename $$test .c); \
+		FAIL_FAST=$(FAIL_FAST) LD_LIBRARY_PATH=$(LIB_BUILD_DIR) $(TESTS_BUILD_DIR)/$*/$$(basename $$test .c); \
 	done
 
 check_fmt: ## Checks formatting and outputs the diff
