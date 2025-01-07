@@ -1,0 +1,7 @@
+# ===========
+# Configuration was copied from linux kernel: https://github.com/torvalds/linux/blob/master/.clang-format
+# ===========
+
+BasedOnStyle: Google
+IndentWidth: 4
+ColumnLimit: 80

@@ -12,6 +12,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - name: "Check format"
+        run: make check_fmt
       - name: "Compile"
         run: make build
       - name: "Run tests"

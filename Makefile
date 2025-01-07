@@ -53,5 +53,11 @@ test_%: build $(TESTS_BUILD_DIR)
 		LD_LIBRARY_PATH=$(LIB_BUILD_DIR) $(TESTS_BUILD_DIR)/$*/$$(basename $$test .c); \
 	done
 
+check_fmt: ## Checks formatting and outputs the diff
+	@./scripts/fmt.sh
+
+fmt: ## Formats the code
+	@./scripts/fmt.sh --fix
+
 clean: ## Clean build file
 	rm -rf $(BUILD_DIR)
