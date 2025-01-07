@@ -96,10 +96,10 @@ clean: ## Clean build file
 	rm -rf $(BUILD_DIR)
 
 __CLI__:
-cli_check_fmt: ## Checks formatting for cli program
+cli_check_fmt: ## Checks formatting for CLI code
 	@./scripts/fmt.sh cli
 
-cli_fmt: ## Formats the code
+cli_fmt: ## Formats the CLI code
 	@./scripts/fmt.sh cli --fix
 
 cli_build: build ## Build cli program
