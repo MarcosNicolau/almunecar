@@ -15,21 +15,21 @@
 
 static jmp_buf env;
 
-#define test(test_fn, ...)                                          \
-    do {                                                            \
-        printf("\n=============== %s ===============\n", #test_fn); \
-        if (setjmp(env) == 0) {                                     \
-            test_fn(__VA_ARGS__);                                   \
-            printf("%spassed%s\n", GRN, RESET);                     \
-        }                                                           \
+#define test(test_fn, ...)                                                     \
+    do {                                                                       \
+        printf("\n=============== %s ===============\n", #test_fn);            \
+        if (setjmp(env) == 0) {                                                \
+            test_fn(__VA_ARGS__);                                              \
+            printf("%spassed%s\n", GRN, RESET);                                \
+        }                                                                      \
     } while (0)
 
-#define BEGIN_TEST()                              \
-    printf("\n==============================\n"); \
+#define BEGIN_TEST()                                                           \
+    printf("\n==============================\n");                              \
     printf("Test suite %s at %s\n", __FILE__, __func__);
 
-#define END_TEST()                                       \
-    printf("\nTest suite %s at %s", __FILE__, __func__); \
+#define END_TEST()                                                             \
+    printf("\nTest suite %s at %s", __FILE__, __func__);                       \
     printf("\n==============================\n");
 
 void test_assert(int expression, char *file, int line) {

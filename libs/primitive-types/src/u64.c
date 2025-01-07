@@ -35,7 +35,8 @@ int u64_leading_zeros(uint64_t a) {
     int count = 0;
 
     for (int i = 0; i < 64; i++) {
-        if (a >> i == 0) break;
+        if (a >> i == 0)
+            break;
         count++;
     }
 
