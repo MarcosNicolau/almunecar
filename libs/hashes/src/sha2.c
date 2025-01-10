@@ -73,7 +73,7 @@ void sha256_process(sha256 *hash) {
     for (int i = 0; i < 64; i++) {
         uint32_t S1 = Sigma1(e);
         uint32_t ch_ = ch(e, f, g);
-        uint32_t t1 = h + S1 + ch + k[i] + w[i];
+        uint32_t t1 = h + S1 + ch_ + k[i] + w[i];
         uint32_t S0 = Sigma0(a);
         uint32_t maj = major(a, b, c);
         uint32_t t2 = S0 + maj;
@@ -98,8 +98,49 @@ void sha256_process(sha256 *hash) {
     hash->h[7] += h;
 }
 
+void sha256_apply_padding(sha256 *hash) {
+    // if its less than 56 bytes, then we need to pad the message to make it a
+    // multiple of 512, this consists of:
+    // - appending 1 bit to the end
+    // - appending k 0 bits where k is the minimum number such that L + 1 + K +
+    // 64 = 512b
+    if (hash->bytes_size < 56) {
+        hash->bytes[hash->bytes_size] = 0x80; // 10000000
+        int k_zeros_to_add = 56 - (hash->bytes_size + 1);
+        for (int i = 1; i < k_zeros_to_add; i++) {
+            hash->bytes[hash->bytes_size + i] = 0x00;
+        }
+    }
+
+    // if the hash is larger than 64 bytes, then we pad the message construct a
+    // new message block and then we create another message block with the total
+    // size length in bits.
+    if (hash->bytes_size > 56) {
+        hash->bytes[hash->bytes_size] = 0x80; // 10000000
+        int k_zeros_to_add = 64 - (hash->bytes_size + 1);
+        for (int i = 1; i < hash->bytes_size - 1 - 64; i++) {
+            hash->bytes[hash->bytes_size + i] = 0x00;
+        }
+        sha256_process(hash);
+        memset(hash->bytes, 0, 56);
+    }
+
+    // Finally, set the last 64 bits to the total message length in bits
+    uint64_t bitlen = hash->total_size * 8 + hash->bytes_size * 8;
+    hash->bytes[63] = bitlen;
+    hash->bytes[62] = bitlen >> 8;
+    hash->bytes[61] = bitlen >> 16;
+    hash->bytes[60] = bitlen >> 24;
+    hash->bytes[59] = bitlen >> 32;
+    hash->bytes[58] = bitlen >> 40;
+    hash->bytes[57] = bitlen >> 48;
+    hash->bytes[56] = bitlen >> 56;
+    sha256_process(hash);
+}
+
 sha256 sha256_new() {
-    sha256 hash = {.h = h};
+    sha256 hash = {.h = h, .bytes_size = 0, .total_size = 0};
+    memset(hash.bytes, 0, 64);
     return hash;
 }
 
@@ -115,3 +156,9 @@ void sha256_update(sha256 *hash, uint8_t *bytes, size_t size) {
         }
     }
 }
+
+u256 sha256_finalize(sha256 *hash) {
+    sha256_apply_padding(hash);
+    u256 digest = u256_from_bytes_32_little_endian(hash->h);
+    return digest;
+};
