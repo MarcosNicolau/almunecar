@@ -22,33 +22,25 @@ static const uint32_t h[8] = {0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
                               0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19};
 
 // equivalent to a left rotation by (w-n). Here w = 32
-uint32_t rotr(uint32_t x, int n) { return (x >> n) | (x << 32 - n); };
+uint32_t rotr(uint32_t x, int n) { return (x >> n) | (x << (32 - n)); };
 uint32_t ch(uint32_t x, uint32_t y, uint32_t z) { return (x & y) ^ (~x ^ z); };
 uint32_t major(uint32_t x, uint32_t y, uint32_t z) {
     return (x & y) ^ (x & z) ^ (y & z);
 };
-uint32_t Sigma0(uint32_t x) {
-    return rotate_right(x, 2) ^ rotate_right(x, 13) ^ rotate_right(x, 22);
-};
-uint32_t Sigma1(uint32_t x) {
-    return rotate_right(x, 6) ^ rotate_right(x, 11) ^ rotate_right(x, 25);
-}
-uint32_t sigma0(uint32_t x) {
-    return rotate_right(x, 7) ^ rotate_right(x, 18) ^ x >> 3;
-};
-uint32_t sigma1(uint32_t x) {
-    return rotate_right(x, 17) ^ rotate_right(x, 19) ^ x >> 10;
-};
+uint32_t Sigma0(uint32_t x) { return rotr(x, 2) ^ rotr(x, 13) ^ rotr(x, 22); };
+uint32_t Sigma1(uint32_t x) { return rotr(x, 6) ^ rotr(x, 11) ^ rotr(x, 25); }
+uint32_t sigma0(uint32_t x) { return rotr(x, 7) ^ rotr(x, 18) ^ x >> 3; };
+uint32_t sigma1(uint32_t x) { return rotr(x, 17) ^ rotr(x, 19) ^ x >> 10; };
 
 void sha256_process(sha256 *hash) {
     uint32_t working_vars[8];
     memccpy(working_vars, hash->h, 0, 8);
-    uint32_t w[64] = 0;
+    uint32_t w[64];
     memset(w, 0, 64);
 
     // we need to fit the 64 entries bytes into 16 entries
     // so each entry needs to have a size of 4 bytes
-    for (int i, j = 0; i < 16; i++, j += 4) {
+    for (int i = 0, j = 0; i < 16; i++, j += 4) {
         // This operation merges the first 4 bytes starting from the jth
         // position
         w[i] = (hash->bytes[j] << 24) | (hash->bytes[j + 1] << 16) |
@@ -118,7 +110,7 @@ void sha256_apply_padding(sha256 *hash) {
     if (hash->bytes_size > 56) {
         hash->bytes[hash->bytes_size] = 0x80; // 10000000
         int k_zeros_to_add = 64 - (hash->bytes_size + 1);
-        for (int i = 1; i < hash->bytes_size - 1 - 64; i++) {
+        for (int i = 1; i < k_zeros_to_add; i++) {
             hash->bytes[hash->bytes_size + i] = 0x00;
         }
         sha256_process(hash);
@@ -139,13 +131,14 @@ void sha256_apply_padding(sha256 *hash) {
 }
 
 sha256 sha256_new() {
-    sha256 hash = {.h = h, .bytes_size = 0, .total_size = 0};
+    sha256 hash = {.bytes_size = 0, .total_size = 0};
+    memccpy(hash.h, h, 0, 8);
     memset(hash.bytes, 0, 64);
     return hash;
 }
 
 void sha256_update(sha256 *hash, uint8_t *bytes, size_t size) {
-    for (int i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; i++) {
         hash->bytes[hash->bytes_size++] = bytes[i];
         // We reach 64 bytes of data size (512 bits), we can construct a new
         // message block and restart the data

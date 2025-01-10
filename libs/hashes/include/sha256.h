@@ -15,7 +15,7 @@ typedef struct {
 } sha256;
 
 sha256 sha256_new();
-void sha256_update(sha256 *, uint8_t *bytes, unsigned int size);
+void sha256_update(sha256 *, uint8_t *bytes, size_t size);
 u256 sha256_finalize(sha256 *);
 
 #endif
