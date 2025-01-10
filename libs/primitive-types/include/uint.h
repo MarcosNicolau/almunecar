@@ -325,6 +325,53 @@
         return result;                                                         \
     }
 
+#define DEFINE_UINT_FROM_BYTES_LITTLE_ENDIAN(NAME, WORDS)                      \
+    NAME NAME##_from_bytes_little_endian(uint8_t bytes[32]) {                  \
+        NAME result = NAME##_zero();                                           \
+        for (int i = 0; i < WORDS; i++) {                                      \
+            result.parts[i] = ((uint64_t)bytes[i * 8]) |                       \
+                              ((uint64_t)bytes[i * 8 + 1] << 8) |              \
+                              ((uint64_t)bytes[i * 8 + 2] << 16) |             \
+                              ((uint64_t)bytes[i * 8 + 3] << 24) |             \
+                              ((uint64_t)bytes[i * 8 + 4] << 32) |             \
+                              ((uint64_t)bytes[i * 8 + 5] << 40) |             \
+                              ((uint64_t)bytes[i * 8 + 6] << 48) |             \
+                              ((uint64_t)bytes[i * 8 + 7] << 56);              \
+        }                                                                      \
+        return result;                                                         \
+    }
+
+#define DEFINE_UINT_GET_BYTES_LITTLE_ENDIAN(NAME, WORDS)                       \
+    void NAME##_get_bytes_little_endian(uint8_t buffer[32], NAME value) {      \
+        for (int i = 0; i < WORDS; i++) {                                      \
+            buffer[i * 8] = value.parts[i] & 0xFF;                             \
+            buffer[i * 8 + 1] = (value.parts[i] >> 8) & 0xFF;                  \
+            buffer[i * 8 + 2] = (value.parts[i] >> 16) & 0xFF;                 \
+            buffer[i * 8 + 3] = (value.parts[i] >> 24) & 0xFF;                 \
+            buffer[i * 8 + 4] = (value.parts[i] >> 32) & 0xFF;                 \
+            buffer[i * 8 + 5] = (value.parts[i] >> 40) & 0xFF;                 \
+            buffer[i * 8 + 6] = (value.parts[i] >> 48) & 0xFF;                 \
+            buffer[i * 8 + 7] = (value.parts[i] >> 56) & 0xFF;                 \
+        }                                                                      \
+    }
+
+#define DEFINE_UINT_FROM_BYTES_32_LITTLE_ENDIAN(NAME, WORDS)                   \
+    NAME NAME##_from_bytes_32_little_endian(uint32_t bytes[8]) {               \
+        NAME result = NAME##_zero();                                           \
+        for (int i = 0; i < WORDS; ++i) {                                      \
+            result.parts[i] = ((uint64_t)bytes[i * 2] & 0xFFFFFFFF) |          \
+                              ((uint64_t)bytes[i * 2 + 1] << 32);              \
+        }                                                                      \
+        return result;                                                         \
+    }
+#define DEFINE_UINT_GET_BYTES_32_LITTLE_ENDIAN(NAME, WORDS)                    \
+    void NAME##_get_bytes_32_little_endian(uint32_t buffer[8], NAME value) {   \
+        for (int i = 0; i < WORDS; ++i) {                                      \
+            buffer[i * 2] = (value.parts[i] & 0xFFFFFFFF);                     \
+            buffer[i * 2 + 1] = (value.parts[i] >> 32) & 0xFFFFFFFF;           \
+        }                                                                      \
+    }
+
 #define DEFINE_UINT_ONE(NAME, WORDS)                                           \
     NAME NAME##_one() {                                                        \
         NAME result = NAME##_zero();                                           \
@@ -449,6 +496,10 @@
     DEFINE_UINT_ONE(NAME, WORDS)                                               \
     DEFINE_UINT_IS_ZERO(NAME)                                                  \
     DEFINE_UINT_FROM_U64(NAME, WORDS)                                          \
+    DEFINE_UINT_FROM_BYTES_LITTLE_ENDIAN(NAME, WORDS)                          \
+    DEFINE_UINT_FROM_BYTES_32_LITTLE_ENDIAN(NAME, WORDS)                       \
+    DEFINE_UINT_GET_BYTES_LITTLE_ENDIAN(NAME, WORDS)                           \
+    DEFINE_UINT_GET_BYTES_32_LITTLE_ENDIAN(NAME, WORDS)                        \
     DEFINE_UINT_OVERFLOW_ADD(NAME, WORDS)                                      \
     DEFINE_UINT_OVERFLOW_SUB(NAME, WORDS)                                      \
     DEFINE_UINT_OVERFLOW_MUL(NAME, WORDS)                                      \
