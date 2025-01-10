@@ -7,7 +7,11 @@
 typedef struct {
     uint32_t h[8];
     uint8_t bytes[64];
-    uint64_t size;
+    // keeps track of the bytes array size
+    uint64_t bytes_size;
+    // keeps track of the whole messages size (when bytes reaches 64 it
+    // restarts)
+    uint64_t total_size;
 } sha256;
 
 sha256 sha256_new();

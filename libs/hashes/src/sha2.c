@@ -39,3 +39,79 @@ uint32_t sigma0(uint32_t x) {
 uint32_t sigma1(uint32_t x) {
     return rotate_right(x, 17) ^ rotate_right(x, 19) ^ x >> 10;
 };
+
+void sha256_process(sha256 *hash) {
+    uint32_t working_vars[8];
+    memccpy(working_vars, hash->h, 0, 8);
+    uint32_t w[64] = 0;
+    memset(w, 0, 64);
+
+    // we need to fit the 64 entries bytes into 16 entries
+    // so each entry needs to have a size of 4 bytes
+    for (int i, j = 0; i < 16; i++, j += 4) {
+        // This operation merges the first 4 bytes starting from the jth
+        // position
+        w[i] = (hash->bytes[j] << 24) | (hash->bytes[j + 1] << 16) |
+               (hash->bytes[j + 2] << 8) | (hash->bytes[j + 3]);
+    }
+
+    for (int i = 16; i < 64; i++) {
+        uint32_t s0 = sigma0(w[i - 15]);
+        uint32_t s1 = sigma1(w[i - 2]);
+        w[i] = w[i - 16] + s0 + w[i - 7] + s1;
+    }
+
+    uint32_t a = hash->h[0];
+    uint32_t b = hash->h[1];
+    uint32_t c = hash->h[2];
+    uint32_t d = hash->h[3];
+    uint32_t e = hash->h[4];
+    uint32_t f = hash->h[5];
+    uint32_t g = hash->h[6];
+    uint32_t h = hash->h[7];
+
+    for (int i = 0; i < 64; i++) {
+        uint32_t S1 = Sigma1(e);
+        uint32_t ch_ = ch(e, f, g);
+        uint32_t t1 = h + S1 + ch + k[i] + w[i];
+        uint32_t S0 = Sigma0(a);
+        uint32_t maj = major(a, b, c);
+        uint32_t t2 = S0 + maj;
+
+        h = g;
+        g = f;
+        f = e;
+        e = d + t1;
+        d = c;
+        c = b;
+        b = a;
+        a = t1 + t2;
+    }
+
+    hash->h[0] += a;
+    hash->h[1] += b;
+    hash->h[2] += c;
+    hash->h[3] += d;
+    hash->h[4] += e;
+    hash->h[5] += f;
+    hash->h[6] += g;
+    hash->h[7] += h;
+}
+
+sha256 sha256_new() {
+    sha256 hash = {.h = h};
+    return hash;
+}
+
+void sha256_update(sha256 *hash, uint8_t *bytes, size_t size) {
+    for (int i = 0; i < size; i++) {
+        hash->bytes[hash->bytes_size++] = bytes[i];
+        // We reach 64 bytes of data size (512 bits), we can construct a new
+        // message block and restart the data
+        if (hash->bytes_size == 64) {
+            sha256_process(hash);
+            hash->bytes_size = 0;
+            hash->total_size += 64;
+        }
+    }
+}
