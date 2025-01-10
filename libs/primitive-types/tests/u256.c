@@ -186,6 +186,63 @@ void test_u256_to_string() {
     assert_that(strcmp(result, expected_result) == 0);
 }
 
+void test_u256_from_u64() {
+    u256 result = u256_from_u64(9223372036854775808ULL);
+    u256 expected_result = {{9223372036854775808ULL, 0, 0, 0}};
+    assert_that(u256_cmp(result, expected_result) == 0);
+}
+
+void test_u256_from_bytes_little_endian() {
+    uint8_t bytes[32];
+    memset(bytes, 0, 32);
+    for (int i = 0; i < 21; i++) {
+        bytes[i] = 255;
+    }
+    u256 result = u256_from_bytes_little_endian(bytes);
+    u256 expected_result = {{18446744073709551615ULL, 18446744073709551615ULL,
+                             1099511627775ULL, 0}};
+
+    assert_that(u256_cmp(result, expected_result) == 0);
+}
+
+void test_u256_get_bytes_little_endian() {
+    u256 number = u256_from_dec_string(
+        "374144419156711147060143317175368453031918731001855");
+    uint8_t buffer[32];
+    u256_get_bytes_little_endian(buffer, number);
+    uint8_t expected_result[32] = {255, 255, 255, 255, 255, 255, 255, 255,
+                                   255, 255, 255, 255, 255, 255, 255, 255,
+                                   255, 255, 255, 255, 255, 0,   0,   0,
+                                   0,   0,   0,   0,   0,   0,   0,   0};
+
+    for (int i = 0; i < 32; i++) {
+        assert_that(expected_result[i] == buffer[i]);
+    }
+}
+
+void test_u256_from_bytes_32_little_endian() {
+    uint32_t bytes[8] = {4294967295, 4294967295, 4294967295, 4294967295,
+                         4294967295, 255,        0,          0};
+    u256 result = u256_from_bytes_32_little_endian(bytes);
+    u256 expected_result = {{18446744073709551615ULL, 18446744073709551615ULL,
+                             1099511627775ULL, 0}};
+
+    assert_that(u256_cmp(result, expected_result) == 0);
+}
+
+void test_u256_get_bytes_32_little_endian() {
+    u256 result = u256_from_dec_string(
+        "374144419156711147060143317175368453031918731001855");
+    uint32_t buffer[8];
+    u256_get_bytes_32_little_endian(buffer, result);
+    uint32_t expected_result[8] = {
+        4294967295, 4294967295, 4294967295, 4294967295, 4294967295, 255, 0, 0};
+
+    for (int i = 0; i < 8; i++) {
+        assert_that(expected_result[i] == buffer[i]);
+    }
+}
+
 int main() {
     BEGIN_TEST();
     test(test_u256_overflow_add);
@@ -204,6 +261,11 @@ int main() {
     test(test_u256_divmod_without_rem);
     test(test_u256_from_string);
     test(test_u256_to_string);
+    test(test_u256_from_u64);
+    test(test_u256_from_bytes_little_endian);
+    test(test_u256_get_bytes_little_endian);
+    test(test_u256_from_bytes_32_little_endian);
+    test(test_u256_get_bytes_32_little_endian);
     END_TEST();
 
     return 0;
