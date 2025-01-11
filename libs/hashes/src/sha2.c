@@ -23,18 +23,16 @@ static const uint32_t h[8] = {0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
 
 // equivalent to a left rotation by (w-n). Here w = 32
 uint32_t rotr(uint32_t x, int n) { return (x >> n) | (x << (32 - n)); };
-uint32_t ch(uint32_t x, uint32_t y, uint32_t z) { return (x & y) ^ (~x ^ z); };
+uint32_t ch(uint32_t x, uint32_t y, uint32_t z) { return (x & y) ^ (~x & z); };
 uint32_t major(uint32_t x, uint32_t y, uint32_t z) {
     return (x & y) ^ (x & z) ^ (y & z);
 };
 uint32_t Sigma0(uint32_t x) { return rotr(x, 2) ^ rotr(x, 13) ^ rotr(x, 22); };
 uint32_t Sigma1(uint32_t x) { return rotr(x, 6) ^ rotr(x, 11) ^ rotr(x, 25); }
-uint32_t sigma0(uint32_t x) { return rotr(x, 7) ^ rotr(x, 18) ^ x >> 3; };
-uint32_t sigma1(uint32_t x) { return rotr(x, 17) ^ rotr(x, 19) ^ x >> 10; };
+uint32_t sigma0(uint32_t x) { return rotr(x, 7) ^ rotr(x, 18) ^ (x >> 3); };
+uint32_t sigma1(uint32_t x) { return rotr(x, 17) ^ rotr(x, 19) ^ (x >> 10); };
 
 void sha256_process(sha256 *hash) {
-    uint32_t working_vars[8];
-    memccpy(working_vars, hash->h, 0, 8);
     uint32_t w[64];
     memset(w, 0, 64);
 
@@ -132,7 +130,8 @@ void sha256_apply_padding(sha256 *hash) {
 
 sha256 sha256_new() {
     sha256 hash = {.bytes_size = 0, .total_size = 0};
-    memccpy(hash.h, h, 0, 8);
+    for (int i = 0; i < 8; i++)
+        hash.h[i] = h[i];
     memset(hash.bytes, 0, 64);
     return hash;
 }
@@ -152,6 +151,18 @@ void sha256_update(sha256 *hash, uint8_t *bytes, size_t size) {
 
 u256 sha256_finalize(sha256 *hash) {
     sha256_apply_padding(hash);
-    u256 digest = u256_from_bytes_32_little_endian(hash->h);
+    // reverse from little endian to big endian
+    uint8_t output[32];
+    for (int i = 0; i < 4; ++i) {
+        output[i] = (hash->h[0] >> (24 - i * 8)) & 0x000000ff;
+        output[i + 4] = (hash->h[1] >> (24 - i * 8)) & 0x000000ff;
+        output[i + 8] = (hash->h[2] >> (24 - i * 8)) & 0x000000ff;
+        output[i + 12] = (hash->h[3] >> (24 - i * 8)) & 0x000000ff;
+        output[i + 16] = (hash->h[4] >> (24 - i * 8)) & 0x000000ff;
+        output[i + 20] = (hash->h[5] >> (24 - i * 8)) & 0x000000ff;
+        output[i + 24] = (hash->h[6] >> (24 - i * 8)) & 0x000000ff;
+        output[i + 28] = (hash->h[7] >> (24 - i * 8)) & 0x000000ff;
+    }
+    u256 digest = u256_from_bytes_little_endian(output);
     return digest;
 };
