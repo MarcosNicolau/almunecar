@@ -1,7 +1,7 @@
 # Project settings
 PROJECT_NAME = almunecar
 BUILD_DIR = build
-LIBS = utils primitive-types # List of libraries in dependency order
+LIBS = utils primitive-types hashes # List of libraries in dependency order
 SRC_DIR = src
 INCLUDE_DIR = include
 TEST_DIR = tests
@@ -32,15 +32,16 @@ LDFLAGS = -shared
 help:
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-build: $(patsubst %, $(LIB_BUILD_DIR)/lib%.so, $(LIBS)) headers ## Build all libraries
+build: headers $(patsubst %, $(LIB_BUILD_DIR)/lib%.so, $(LIBS)) ## Build all libraries
 
-install: $(patsubst %, $(INSTALL_LIB_DIR)/libalmunecar_%.so, $(LIBS)) headers_install ## Build all libraries
+install: headers_install $(patsubst %, $(INSTALL_LIB_DIR)/libalmunecar_%.so, $(LIBS)) ## Build all libraries
 
 # Build shared library for each lib into build directory
 $(LIB_BUILD_DIR)/lib%.so: libs/%/src/*.c | $(LIB_BUILD_DIR) $(OBJ_BUILD_DIR)
+	$(eval include libs/$*/deps.mk)
 	@$(CC) $(CFLAGS) -Ilibs/$*/$(INCLUDE_DIR) -I$(INCLUDE_BUILD_DIR) \
 		-c $^ -o $(OBJ_BUILD_DIR)/$*_objs.o
-	@$(CC) $(LDFLAGS) -o $@ $(OBJ_BUILD_DIR)/$*_objs.o
+	@$(CC) $(LDFLAGS) -L$(LIB_BUILD_DIR) $(patsubst %, -l%, $(DEPS)) -o $@ $(OBJ_BUILD_DIR)/$*_objs.o
 
 # Build shared library for each lib into /usr/local/lib directory
 $(INSTALL_LIB_DIR)/libalmunecar_%.so: libs/%/src/*.c
@@ -82,7 +83,8 @@ test: build ## Run test for all libs. To run only the tests of a specific lib ru
 test_%: build $(TESTS_BUILD_DIR)
 	@for test in libs/$*/$(TEST_DIR)/*.c; do \
 		mkdir -p $(TESTS_BUILD_DIR)/$*; \
-		$(CC) $(CFLAGS) -I$(INCLUDE_BUILD_DIR) -o $(TESTS_BUILD_DIR)/$*/$$(basename $$test .c) $$test -L$(LIB_BUILD_DIR) -l$*; \
+		$(eval include libs/$*/deps.mk) \
+		$(CC) $(CFLAGS) -I$(INCLUDE_BUILD_DIR) -o $(TESTS_BUILD_DIR)/$*/$$(basename $$test .c) $$test -L$(LIB_BUILD_DIR) $(patsubst %, -l%, $(DEPS)) -l$*; \
 		FAIL_FAST=$(FAIL_FAST) LD_LIBRARY_PATH=$(LIB_BUILD_DIR) $(TESTS_BUILD_DIR)/$*/$$(basename $$test .c); \
 	done
 
