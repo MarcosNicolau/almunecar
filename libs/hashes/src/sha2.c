@@ -101,11 +101,10 @@ void sha256_apply_padding(sha256 *hash) {
             hash->bytes[hash->bytes_size + i] = 0x00;
         }
     }
-
     // if the hash is larger than 64 bytes, then we pad the message construct a
     // new message block and then we create another message block with the total
     // size length in bits.
-    if (hash->bytes_size > 56) {
+    else {
         hash->bytes[hash->bytes_size] = 0x80; // 10000000
         int k_zeros_to_add = 64 - (hash->bytes_size + 1);
         for (int i = 1; i < k_zeros_to_add; i++) {
@@ -145,6 +144,7 @@ void sha256_update(sha256 *hash, uint8_t *bytes, size_t size) {
             sha256_process(hash);
             hash->bytes_size = 0;
             hash->total_size += 64;
+            memset(hash->bytes, 0, 64);
         }
     }
 }
