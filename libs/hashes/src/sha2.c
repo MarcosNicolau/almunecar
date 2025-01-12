@@ -101,9 +101,10 @@ void sha256_apply_padding(sha256 *hash) {
             hash->bytes[hash->bytes_size + i] = 0x00;
         }
     }
-    // if the hash is larger than 64 bytes, then we pad the message construct a
-    // new message block and then we create another message block with the total
-    // size length in bits.
+    // if the hash is larger than 64 bytes, then we pad the message and
+    // construct a new message block. This is because the protocol reserves the
+    // last 64 bits of the message for the total length in bits so we have to
+    // make space for it.
     else {
         hash->bytes[hash->bytes_size] = 0x80; // 10000000
         int k_zeros_to_add = 64 - (hash->bytes_size + 1);
