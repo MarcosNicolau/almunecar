@@ -19,8 +19,8 @@ Glossary:
 | ------------------------------------------ | -------------------------------------- | ------ |
 | [primitive-types](./libs/primitive-types/) | UINT & U256                            | ✅     |
 | [math](./libs/math/)                       | Utils for polynomials and modular math | 🚧     |
-| [hashes](./libs/hashes/)                   | SHA2-256                               | 🚧     |
-| [rsa](./libs/rsa/)                         | RSA implementation                     | 📝     |
+| [hashes](./libs/hashes/)                   | SHA-256                                | ✅     |
+| [rsa](./libs/rsa/)                         | RSA implementation                     | 🚧     |
 | [elliptic-curves](./libs/eliptic-curves/)  | ECDSA & BLS12-381                      | 📝     |
 | [snarks](./libs/snarks/)                   | groth & plonk                          | 📝     |
 | [pcs](./libs/pcs/)                         | KZG                                    | 📝     |
