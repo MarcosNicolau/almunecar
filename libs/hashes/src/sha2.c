@@ -117,14 +117,14 @@ void sha256_apply_padding(sha256 *hash) {
 
     // Finally, set the last 64 bits to the total message length in bits
     uint64_t bitlen = hash->total_size * 8 + hash->bytes_size * 8;
-    hash->bytes[63] = bitlen;
-    hash->bytes[62] = bitlen >> 8;
-    hash->bytes[61] = bitlen >> 16;
-    hash->bytes[60] = bitlen >> 24;
-    hash->bytes[59] = bitlen >> 32;
-    hash->bytes[58] = bitlen >> 40;
-    hash->bytes[57] = bitlen >> 48;
     hash->bytes[56] = bitlen >> 56;
+    hash->bytes[57] = bitlen >> 48;
+    hash->bytes[58] = bitlen >> 40;
+    hash->bytes[59] = bitlen >> 32;
+    hash->bytes[60] = bitlen >> 24;
+    hash->bytes[61] = bitlen >> 16;
+    hash->bytes[62] = bitlen >> 8;
+    hash->bytes[63] = bitlen;
     sha256_process(hash);
 }
 
@@ -151,18 +151,15 @@ void sha256_update(sha256 *hash, uint8_t *bytes, size_t size) {
 
 u256 sha256_finalize(sha256 *hash) {
     sha256_apply_padding(hash);
-    // reverse from little endian to big endian
-    uint8_t output[32];
-    for (int i = 0; i < 4; ++i) {
-        output[i] = (hash->h[0] >> (24 - i * 8)) & 0x000000ff;
-        output[i + 4] = (hash->h[1] >> (24 - i * 8)) & 0x000000ff;
-        output[i + 8] = (hash->h[2] >> (24 - i * 8)) & 0x000000ff;
-        output[i + 12] = (hash->h[3] >> (24 - i * 8)) & 0x000000ff;
-        output[i + 16] = (hash->h[4] >> (24 - i * 8)) & 0x000000ff;
-        output[i + 20] = (hash->h[5] >> (24 - i * 8)) & 0x000000ff;
-        output[i + 24] = (hash->h[6] >> (24 - i * 8)) & 0x000000ff;
-        output[i + 28] = (hash->h[7] >> (24 - i * 8)) & 0x000000ff;
+    // SHA-2 algorithm defines the hash values in big-endian format, but our
+    // implementation stores the hash values in little-endian format.
+    // we need to convert the hash to big-endian byte order
+    uint8_t bytes[32];
+    for (int j = 0; j < 8; ++j) {
+        for (int i = 0; i < 4; ++i) {
+            bytes[j * 4 + i] = (hash->h[j] >> (24 - i * 8)) & 0xFF;
+        }
     }
-    u256 digest = u256_from_bytes_little_endian(output);
+    u256 digest = u256_from_bytes_big_endian(bytes);
     return digest;
 };
