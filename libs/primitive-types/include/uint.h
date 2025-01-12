@@ -325,6 +325,66 @@
         return result;                                                         \
     }
 
+#define DEFINE_UINT_FROM_BYTES_BIG_ENDIAN(NAME, WORDS)                         \
+    NAME NAME##_from_bytes_big_endian(uint8_t bytes[32]) {                     \
+        NAME result = NAME##_zero();                                           \
+        for (int i = WORDS - 1, j = 0; i >= 0; i--, j++) {                     \
+            result.parts[i] = ((uint64_t)bytes[j * 8] << 56) |                 \
+                              ((uint64_t)bytes[j * 8 + 1] << 48) |             \
+                              ((uint64_t)bytes[j * 8 + 2] << 40) |             \
+                              ((uint64_t)bytes[j * 8 + 3] << 32) |             \
+                              ((uint64_t)bytes[j * 8 + 4] << 24) |             \
+                              ((uint64_t)bytes[j * 8 + 5] << 16) |             \
+                              ((uint64_t)bytes[j * 8 + 6] << 8) |              \
+                              ((uint64_t)bytes[j * 8 + 7]);                    \
+        }                                                                      \
+        return result;                                                         \
+    }
+
+#define DEFINE_UINT_GET_BYTES_BIG_ENDIAN(NAME, WORDS)                          \
+    void NAME##_get_bytes_big_endian(uint8_t buffer[32], NAME value) {         \
+        for (int i = WORDS - 1, j = 0; i >= 0; i--, j++) {                     \
+            buffer[i * 8] = (value.parts[j] >> 56) & 0xFF;                     \
+            buffer[i * 8 + 1] = (value.parts[j] >> 48) & 0xFF;                 \
+            buffer[i * 8 + 2] = (value.parts[j] >> 40) & 0xFF;                 \
+            buffer[i * 8 + 3] = (value.parts[j] >> 32) & 0xFF;                 \
+            buffer[i * 8 + 4] = (value.parts[j] >> 24) & 0xFF;                 \
+            buffer[i * 8 + 5] = (value.parts[j] >> 16) & 0xFF;                 \
+            buffer[i * 8 + 6] = (value.parts[j] >> 8) & 0xFF;                  \
+            buffer[i * 8 + 7] = value.parts[j] & 0xFF;                         \
+        }                                                                      \
+    }
+
+#define DEFINE_UINT_FROM_BYTES_LITTLE_ENDIAN(NAME, WORDS)                      \
+    NAME NAME##_from_bytes_little_endian(uint8_t bytes[32]) {                  \
+        NAME result = NAME##_zero();                                           \
+        for (int i = 0; i < WORDS; i++) {                                      \
+            result.parts[i] = ((uint64_t)bytes[i * 8]) |                       \
+                              ((uint64_t)bytes[i * 8 + 1] << 8) |              \
+                              ((uint64_t)bytes[i * 8 + 2] << 16) |             \
+                              ((uint64_t)bytes[i * 8 + 3] << 24) |             \
+                              ((uint64_t)bytes[i * 8 + 4] << 32) |             \
+                              ((uint64_t)bytes[i * 8 + 5] << 40) |             \
+                              ((uint64_t)bytes[i * 8 + 6] << 48) |             \
+                              ((uint64_t)bytes[i * 8 + 7] << 56);              \
+        }                                                                      \
+        return result;                                                         \
+    }
+
+#define DEFINE_UINT_GET_BYTES_LITTLE_ENDIAN(NAME, WORDS)                       \
+    void NAME##_get_bytes_little_endian(uint8_t buffer[32], NAME value) {      \
+        for (int i = 0; i < WORDS; i++) {                                      \
+            buffer[i * 8] = value.parts[i] & 0xFF;                             \
+            buffer[i * 8 + 1] = (value.parts[i] >> 8) & 0xFF;                  \
+            buffer[i * 8 + 2] = (value.parts[i] >> 16) & 0xFF;                 \
+            buffer[i * 8 + 3] = (value.parts[i] >> 24) & 0xFF;                 \
+            buffer[i * 8 + 4] = (value.parts[i] >> 32) & 0xFF;                 \
+            buffer[i * 8 + 5] = (value.parts[i] >> 40) & 0xFF;                 \
+            buffer[i * 8 + 6] = (value.parts[i] >> 48) & 0xFF;                 \
+            buffer[i * 8 + 7] = (value.parts[i] >> 56) & 0xFF;                 \
+        }                                                                      \
+    }
+
 #define DEFINE_UINT_ONE(NAME, WORDS)                                           \
     NAME NAME##_one() {                                                        \
         NAME result = NAME##_zero();                                           \
@@ -449,6 +509,10 @@
     DEFINE_UINT_ONE(NAME, WORDS)                                               \
     DEFINE_UINT_IS_ZERO(NAME)                                                  \
     DEFINE_UINT_FROM_U64(NAME, WORDS)                                          \
+    DEFINE_UINT_FROM_BYTES_BIG_ENDIAN(NAME, WORDS)                             \
+    DEFINE_UINT_FROM_BYTES_LITTLE_ENDIAN(NAME, WORDS)                          \
+    DEFINE_UINT_GET_BYTES_BIG_ENDIAN(NAME, WORDS)                              \
+    DEFINE_UINT_GET_BYTES_LITTLE_ENDIAN(NAME, WORDS)                           \
     DEFINE_UINT_OVERFLOW_ADD(NAME, WORDS)                                      \
     DEFINE_UINT_OVERFLOW_SUB(NAME, WORDS)                                      \
     DEFINE_UINT_OVERFLOW_MUL(NAME, WORDS)                                      \
