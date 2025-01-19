@@ -11,9 +11,8 @@ void test_sha256_empty() {
     sha256_update(&hash, (uint8_t *)"", 0);
     u256 digest = sha256_finalize(&hash);
     char *str = u256_to_string(digest);
-    char *expected_result =
-        "1029873362495540970295352123225813227897999006481980349933793970011156"
-        "65086549";
+    char *expected_result = "1029873362495540970295352123225813227897999006481980349933793970011156"
+                            "65086549";
     assert_that(strcmp(str, expected_result) == 0);
 }
 
@@ -23,9 +22,8 @@ void test_sha256_single_char() {
     sha256_update(&hash, bytes, 1);
     u256 digest = sha256_finalize(&hash);
     char *str = u256_to_string(digest);
-    char *expected_result =
-        "9163488015244361753484262128703993804158108125491405800297860105017955"
-        "6493499";
+    char *expected_result = "9163488015244361753484262128703993804158108125491405800297860105017955"
+                            "6493499";
     assert_that(strcmp(str, expected_result) == 0);
 }
 
@@ -35,9 +33,8 @@ void test_sha256_short_string() {
     sha256_update(&hash, bytes, 3);
     u256 digest = sha256_finalize(&hash);
     char *str = u256_to_string(digest);
-    char *expected_result =
-        "8434236848709080036652383492814226366010488369501651437746298582971681"
-        "7089965"; // SHA-256("abc") result
+    char *expected_result = "8434236848709080036652383492814226366010488369501651437746298582971681"
+                            "7089965"; // SHA-256("abc") result
     assert_that(strcmp(str, expected_result) == 0);
 }
 
@@ -47,9 +44,8 @@ void test_sha256_long_string() {
     sha256_update(&hash, bytes, strlen((char *)bytes));
     u256 digest = sha256_finalize(&hash);
     char *str = u256_to_string(digest);
-    char *expected_result =
-        "9754582991727437845042049306863340363436609792361092711364013968352019"
-        "4405778";
+    char *expected_result = "9754582991727437845042049306863340363436609792361092711364013968352019"
+                            "4405778";
     assert_that(strcmp(str, expected_result) == 0);
 }
 
@@ -59,9 +55,8 @@ void test_sha256_binary_data() {
     sha256_update(&hash, bytes, sizeof(bytes));
     u256 digest = sha256_finalize(&hash);
     char *str = u256_to_string(digest);
-    char *expected_result =
-        "1155050113059766760852447818468967315849566989347365055840175606142539"
-        "40679982"; // SHA-256 of binary data
+    char *expected_result = "1155050113059766760852447818468967315849566989347365055840175606142539"
+                            "40679982"; // SHA-256 of binary data
     assert_that(strcmp(str, expected_result) == 0);
 }
 
@@ -73,9 +68,8 @@ void test_sha256_repeated_updates() {
     sha256_update(&hash, part2, strlen((char *)part2));
     u256 digest = sha256_finalize(&hash);
     char *str = u256_to_string(digest);
-    char *expected_result =
-        "2233181402739248830710573607548020574234866647396933363417373207145921"
-        "5699411";
+    char *expected_result = "2233181402739248830710573607548020574234866647396933363417373207145921"
+                            "5699411";
     assert_that(strcmp(str, expected_result) == 0);
 }
 
