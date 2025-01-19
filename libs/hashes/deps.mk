@@ -1,1 +1,1 @@
-DEPS := primitive-types
+DEPS := utils primitive-types
