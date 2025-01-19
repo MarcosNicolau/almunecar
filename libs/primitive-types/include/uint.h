@@ -290,6 +290,15 @@
         return (NAME##_div_op){.quot = quot, .rem = rem};                      \
     }
 
+#define DEFINE_UINT_RANDOM(NAME, WORDS)                                        \
+    NAME NAME##_random() {}
+
+#define DEFINE_UINT_IS_PRIME(NAME, WORDS)                                      \
+    NAME NAME##_is_prime(NAME a) {}
+
+#define DEFINE_UINT_RANDOM_PRIME(NAME, WORDS)                                  \
+    NAME NAME##_random_prime() {}
+
 #define DEFINE_UINT_ZERO(NAME, WORDS)                                          \
     NAME NAME##_zero() {                                                       \
         NAME result;                                                           \
@@ -298,10 +307,20 @@
         return result;                                                         \
     }
 
-/** \
- * Parses an unsigned integer from a decimal string. \
- *                                                                                                       \
- * Returns the unsigned integer represented by the string `str`. \
+#define DEFINE_UINT_FROM_LIMBS(NAME, WORDS)                                    \
+    NAME NAME##_from_limbs(uint64_t *limbs, unsigned int size) {               \
+        NAME result = NAME##_zero();                                           \
+        assert(size <= WORDS);                                                 \
+        for (int i = 0; i < size; i++) {                                       \
+            result.parts[i] = limbs[i];                                        \
+        }                                                                      \
+        return result;                                                         \
+    }
+
+/**
+ * Parses an unsigned integer from a decimal string.
+ *
+ * Returns the unsigned integer represented by the string `str`.
  */
 #define DEFINE_UINT_FROM_DEC_STRING(NAME, WORDS)                               \
     NAME NAME##_from_dec_string(char *str) {                                   \
@@ -524,6 +543,10 @@
     DEFINE_UINT_SHR(NAME, WORDS)                                               \
     DEFINE_UINT_BITS(NAME, WORDS)                                              \
     DEFINE_UINT_DIV_MOD(NAME, WORDS)                                           \
+    DEFINE_UINT_RANDOM(NAME, WORDS)                                            \
+    DEFINE_UINT_IS_PRIME(NAME, WORDS)                                          \
+    DEFINE_UINT_RANDOM_PRIME(NAME, WORDS)                                      \
+    DEFINE_UINT_FROM_LIMBS(NAME, WORDS)                                        \
     DEFINE_UINT_FROM_DEC_STRING(NAME, WORDS)                                   \
     DEFINE_UINT_TO_STRING(NAME, WORDS)                                         \
     DEFINE_UINT_PRINT(NAME, WORDS)                                             \
