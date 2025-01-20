@@ -24,7 +24,7 @@ typedef struct {
  * ```
  */
 #define big_uint_new_heap(SIZE)                                                                                        \
-    (BigUint) { .size = (SIZE), .limbs = malloc(sizeof(uint64_t) * (SIZE)) } // Allocates memory for the limbs
+    (BigUint) { .size = (SIZE), .limbs = malloc(sizeof(uint64_t) * (SIZE)) }
 
 /**
  * Creates a `BigUint` on the stack with a specified number of limbs, all initialized to 0.
@@ -37,7 +37,7 @@ typedef struct {
  * ```
  */
 #define big_uint_new(SIZE)                                                                                             \
-    (BigUint) { .size = (SIZE), .limbs = (uint64_t[SIZE]){0} } // Initializes a BigUint with 0s
+    (BigUint) { .size = (SIZE), .limbs = (uint64_t[SIZE]){0} }
 
 /**
  * Creates a `BigUint` on the stack with a specified number of limbs and initializes them with given values.
