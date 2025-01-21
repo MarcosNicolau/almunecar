@@ -146,7 +146,7 @@ void test_u256_from_string() {
 }
 
 void test_u256_to_string() {
-    char *result = u256_to_string((u256){{18446744073709551615ULL, 18446744073709551615ULL, 1099511627775ULL, 0}});
+    char *result = u256_to_dec_string((u256){{18446744073709551615ULL, 18446744073709551615ULL, 1099511627775ULL, 0}});
     char *expected_result = "374144419156711147060143317175368453031918731001855";
 
     assert_that(strcmp(result, expected_result) == 0);
