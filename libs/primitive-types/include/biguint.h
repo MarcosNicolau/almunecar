@@ -1,5 +1,5 @@
-#ifndef BIG_UINT_H
-#define BIG_UINT_H
+#ifndef BIGUINT_H
+#define BIGUINT_H
 
 #include "u64.h"
 #include <stdlib.h>
@@ -15,15 +15,15 @@ typedef struct {
  * @param SIZE The number of limbs (64-bit integers) for the `BigUint`.
  *
  * @note
- * You must call `big_uint_free_limbs` to release the memory after use to avoid memory leaks.
+ * You must call `biguint_free_limbs` to release the memory after use to avoid memory leaks.
  *
  * @example
  * ```
- * BigUint num = big_uint_new_heap(10);  // Allocate a BigUint with 10 limbs on the heap
- * big_uint_free_limbs(&num);  // Don't forget to free the memory after use!
+ * BigUint num = biguint_new_heap(10);  // Allocate a BigUint with 10 limbs on the heap
+ * biguint_free_limbs(&num);  // Don't forget to free the memory after use!
  * ```
  */
-#define big_uint_new_heap(SIZE)                                                                                        \
+#define biguint_new_heap(SIZE)                                                                                         \
     (BigUint) { .size = (SIZE), .limbs = malloc(sizeof(uint64_t) * (SIZE)) }
 
 /**
@@ -33,10 +33,10 @@ typedef struct {
  *
  * @example
  * ```
- * BigUint num = big_uint_new(5);  // Creates a BigUint with 5 limbs, all initialized to 0
+ * BigUint num = biguint_new(5);  // Creates a BigUint with 5 limbs, all initialized to 0
  * ```
  */
-#define big_uint_new(SIZE)                                                                                             \
+#define biguint_new(SIZE)                                                                                              \
     (BigUint) { .size = (SIZE), .limbs = (uint64_t[SIZE]){0} }
 
 /**
@@ -47,11 +47,11 @@ typedef struct {
  *
  * @example
  * ```
- * BigUint num = big_uint_new_with_limbs(3, {10, 20, 30});  // Creates a BigUint with 3 limbs, initialized to 10, 20,
+ * BigUint num = biguint_new_with_limbs(3, {10, 20, 30});  // Creates a BigUint with 3 limbs, initialized to 10, 20,
  * and 30
  * ```
  */
-#define big_uint_new_with_limbs(SIZE, ...)                                                                             \
+#define biguint_new_with_limbs(SIZE, ...)                                                                              \
     (BigUint) { .size = (SIZE), .limbs = (uint64_t[SIZE])__VA_ARGS__ } // Initialize with custom values
 
 /**
@@ -62,11 +62,11 @@ typedef struct {
  *
  * @example
  * ```
- * BigUint num = big_uint_new_with_limbs(3, {10, 20, 30});  // Creates a BigUint with 3 limbs, initialized to 10, 20,
+ * BigUint num = biguint_new_with_limbs(3, {10, 20, 30});  // Creates a BigUint with 3 limbs, initialized to 10, 20,
  * and 30
  * ```
  */
-#define big_uint_new_from_limbs(SIZE, LIMBS)                                                                           \
+#define biguint_new_from_limbs(SIZE, LIMBS)                                                                            \
     (BigUint) { .size = (SIZE), .limbs = LIMBS } // Initialize with custom values
 
 /**
@@ -77,10 +77,10 @@ typedef struct {
  * @example
  * ```
  * BigUint num;
- * big_uint_zero(&num);  // Set `num` to zero
+ * biguint_zero(&num);  // Set `num` to zero
  * ```
  */
-void big_uint_zero(BigUint *out);
+void biguint_zero(BigUint *out);
 
 /**
  * Sets the value of the BigUint to one.
@@ -90,10 +90,10 @@ void big_uint_zero(BigUint *out);
  * @example
  * ```
  * BigUint num;
- * big_uint_one(&num);  // Set `num` to one
+ * biguint_one(&num);  // Set `num` to one
  * ```
  */
-void big_uint_one(BigUint *out);
+void biguint_one(BigUint *out);
 
 /**
  * Initializes a BigUint with a 64-bit unsigned integer value.
@@ -104,10 +104,10 @@ void big_uint_one(BigUint *out);
  * @example
  * ```
  * BigUint num;
- * big_uint_from_u64(12345, &num);  // Set `num` to the value 12345
+ * biguint_from_u64(12345, &num);  // Set `num` to the value 12345
  * ```
  */
-void big_uint_from_u64(uint64_t val, BigUint *out);
+void biguint_from_u64(uint64_t val, BigUint *out);
 
 /**
  * Initializes a BigUint from a decimal string.
@@ -118,10 +118,10 @@ void big_uint_from_u64(uint64_t val, BigUint *out);
  * @example
  * ```
  * BigUint num;
- * big_uint_from_dec_string("12345", &num);  // Convert the string "12345" into a BigUint
+ * biguint_from_dec_string("12345", &num);  // Convert the string "12345" into a BigUint
  * ```
  */
-void big_uint_from_dec_string(char *str, BigUint *out);
+void biguint_from_dec_string(char *str, BigUint *out);
 
 /**
  * Initializes a BigUint from a byte array in big-endian format.
@@ -133,10 +133,10 @@ void big_uint_from_dec_string(char *str, BigUint *out);
  * ```
  * uint8_t bytes[] = {0x01, 0x23};
  * BigUint num;
- * big_uint_from_bytes_big_endian(bytes, &num);  // Convert the byte array to BigUint
+ * biguint_from_bytes_big_endian(bytes, &num);  // Convert the byte array to BigUint
  * ```
  */
-void big_uint_from_bytes_big_endian(uint8_t *bytes, BigUint *out);
+void biguint_from_bytes_big_endian(uint8_t *bytes, BigUint *out);
 
 /**
  * Retrieves the BigUint value as a byte array in big-endian format.
@@ -146,12 +146,12 @@ void big_uint_from_bytes_big_endian(uint8_t *bytes, BigUint *out);
  *
  * @example
  * ```
- * BigUint num = big_uint_new(2);
+ * BigUint num = biguint_new(2);
  * uint8_t buffer[2];
- * big_uint_get_bytes_big_endian(num, buffer);  // Store the value of `num` in big-endian format
+ * biguint_get_bytes_big_endian(num, buffer);  // Store the value of `num` in big-endian format
  * ```
  */
-void big_uint_get_bytes_big_endian(BigUint value, uint8_t *buffer);
+void biguint_get_bytes_big_endian(BigUint value, uint8_t *buffer);
 
 /**
  * Initializes a BigUint from a byte array in little-endian format.
@@ -163,10 +163,10 @@ void big_uint_get_bytes_big_endian(BigUint value, uint8_t *buffer);
  * ```
  * uint8_t bytes[] = {0x23, 0x01};
  * BigUint num;
- * big_uint_from_bytes_little_endian(bytes, &num);  // Convert the little-endian byte array to BigUint
+ * biguint_from_bytes_little_endian(bytes, &num);  // Convert the little-endian byte array to BigUint
  * ```
  */
-void big_uint_from_bytes_little_endian(uint8_t *bytes, BigUint *out);
+void biguint_from_bytes_little_endian(uint8_t *bytes, BigUint *out);
 
 /**
  * Retrieves the BigUint value as a byte array in little-endian format.
@@ -176,12 +176,12 @@ void big_uint_from_bytes_little_endian(uint8_t *bytes, BigUint *out);
  *
  * @example
  * ```
- * BigUint num = big_uint_new(2);
+ * BigUint num = biguint_new(2);
  * uint8_t buffer[2];
- * big_uint_get_bytes_little_endian(num, buffer);  // Store the value of `num` in little-endian format
+ * biguint_get_bytes_little_endian(num, buffer);  // Store the value of `num` in little-endian format
  * ```
  */
-void big_uint_get_bytes_little_endian(BigUint value, uint8_t *buffer);
+void biguint_get_bytes_little_endian(BigUint value, uint8_t *buffer);
 
 /**
  * Converts a BigUint to a decimal string.
@@ -191,11 +191,11 @@ void big_uint_get_bytes_little_endian(BigUint value, uint8_t *buffer);
  *
  * @example
  * ```
- * BigUint num = big_uint_new(2);
- * char *str = big_uint_to_dec_string(num);  // Convert the BigUint to a decimal string
+ * BigUint num = biguint_new(2);
+ * char *str = biguint_to_dec_string(num);  // Convert the BigUint to a decimal string
  * ```
  */
-char *big_uint_to_dec_string(BigUint a);
+char *biguint_to_dec_string(BigUint a);
 
 /**
  * Copies the value of one BigUint to another.
@@ -205,12 +205,12 @@ char *big_uint_to_dec_string(BigUint a);
  *
  * @example
  * ```
- * BigUint src = big_uint_new(1);
+ * BigUint src = biguint_new(1);
  * BigUint dst;
- * big_uint_cpy(&dst, src);  // Copy the value of `src` to `dst`
+ * biguint_cpy(&dst, src);  // Copy the value of `src` to `dst`
  * ```
  */
-void big_uint_cpy(BigUint *dst, BigUint src);
+void biguint_cpy(BigUint *dst, BigUint src);
 
 /**
  * Returns the number of bits required to represent the BigUint.
@@ -220,11 +220,11 @@ void big_uint_cpy(BigUint *dst, BigUint src);
  *
  * @example
  * ```
- * BigUint num = big_uint_new(3);
- * int bits = big_uint_bits(num);  // Get the number of bits needed to represent `num`
+ * BigUint num = biguint_new(3);
+ * int bits = biguint_bits(num);  // Get the number of bits needed to represent `num`
  * ```
  */
-int big_uint_bits(BigUint a);
+int biguint_bits(BigUint a);
 
 /**
  * Checks if the BigUint value is zero.
@@ -234,11 +234,11 @@ int big_uint_bits(BigUint a);
  *
  * @example
  * ```
- * BigUint num = big_uint_new(1);
- * int isZero = big_uint_is_zero(num);  // Check if `num` is zero
+ * BigUint num = biguint_new(1);
+ * int isZero = biguint_is_zero(num);  // Check if `num` is zero
  * ```
  */
-int big_uint_is_zero(BigUint a);
+int biguint_is_zero(BigUint a);
 
 /**
  * Compares two BigUint values.
@@ -249,12 +249,12 @@ int big_uint_is_zero(BigUint a);
  *
  * @example
  * ```
- * BigUint a = big_uint_new(1);
- * BigUint b = big_uint_new(1);
- * int comparison = big_uint_cmp(a, b);  // Compare `a` and `b`
+ * BigUint a = biguint_new(1);
+ * BigUint b = biguint_new(1);
+ * int comparison = biguint_cmp(a, b);  // Compare `a` and `b`
  * ```
  */
-int big_uint_cmp(BigUint a, BigUint b);
+int biguint_cmp(BigUint a, BigUint b);
 
 /**
  * Frees the memory allocated for the limbs of a BigUint that was allocated on the heap.
@@ -263,11 +263,11 @@ int big_uint_cmp(BigUint a, BigUint b);
  *
  * @example
  * ```
- * BigUint num = big_uint_new_heap(5);
- * big_uint_free_limbs(&num);  // Free the memory after use
+ * BigUint num = biguint_new_heap(5);
+ * biguint_free_limbs(&num);  // Free the memory after use
  * ```
  */
-void big_uint_free_limbs(BigUint *a);
+void biguint_free_limbs(BigUint *a);
 
 /**
  * Adds two BigUint values and stores the result in the first operand.
@@ -277,12 +277,12 @@ void big_uint_free_limbs(BigUint *a);
  *
  * @example
  * ```
- * BigUint a = big_uint_new(1);
- * BigUint b = big_uint_new(1);
- * big_uint_add(&a, b);  // Add `b` to `a`
+ * BigUint a = biguint_new(1);
+ * BigUint b = biguint_new(1);
+ * biguint_add(&a, b);  // Add `b` to `a`
  * ```
  */
-void big_uint_add(BigUint *a, BigUint b);
+void biguint_add(BigUint *a, BigUint b);
 
 /**
  * Subtracts the second BigUint from the first and stores the result in the first operand.
@@ -292,12 +292,12 @@ void big_uint_add(BigUint *a, BigUint b);
  *
  * @example
  * ```
- * BigUint a = big_uint_new(1);
- * BigUint b = big_uint_new(1);
- * big_uint_sub(&a, b);  // Subtract `b` from `a`
+ * BigUint a = biguint_new(1);
+ * BigUint b = biguint_new(1);
+ * biguint_sub(&a, b);  // Subtract `b` from `a`
  * ```
  */
-void big_uint_sub(BigUint *a, BigUint b);
+void biguint_sub(BigUint *a, BigUint b);
 
 /**
  * Multiplies two BigUint values and stores the result in the first operand.
@@ -307,12 +307,12 @@ void big_uint_sub(BigUint *a, BigUint b);
  *
  * @example
  * ```
- * BigUint a = big_uint_new(1);
- * BigUint b = big_uint_new(1);
- * big_uint_mul(&a, b);  // Multiply `a` and `b`
+ * BigUint a = biguint_new(1);
+ * BigUint b = biguint_new(1);
+ * biguint_mul(&a, b);  // Multiply `a` and `b`
  * ```
  */
-void big_uint_mul(BigUint *a, BigUint b);
+void biguint_mul(BigUint *a, BigUint b);
 
 /**
  * Checks for overflow when adding two BigUint values.
@@ -323,12 +323,12 @@ void big_uint_mul(BigUint *a, BigUint b);
  *
  * @example
  * ```
- * BigUint a = big_uint_new(1);
- * BigUint b = big_uint_new(1);
- * int overflow = big_uint_overflow_add(&a, b);  // Check if adding `a` and `b` overflows
+ * BigUint a = biguint_new(1);
+ * BigUint b = biguint_new(1);
+ * int overflow = biguint_overflow_add(&a, b);  // Check if adding `a` and `b` overflows
  * ```
  */
-int big_uint_overflow_add(BigUint *a, BigUint b);
+int biguint_overflow_add(BigUint *a, BigUint b);
 
 /**
  * Checks for overflow when subtracting two BigUint values.
@@ -339,12 +339,12 @@ int big_uint_overflow_add(BigUint *a, BigUint b);
  *
  * @example
  * ```
- * BigUint a = big_uint_new(1);
- * BigUint b = big_uint_new(1);
- * int overflow = big_uint_overflow_sub(&a, b);  // Check if subtracting `b` from `a` overflows
+ * BigUint a = biguint_new(1);
+ * BigUint b = biguint_new(1);
+ * int overflow = biguint_overflow_sub(&a, b);  // Check if subtracting `b` from `a` overflows
  * ```
  */
-int big_uint_overflow_sub(BigUint *a, BigUint b);
+int biguint_overflow_sub(BigUint *a, BigUint b);
 
 /**
  * Checks for overflow when multiplying two BigUint values.
@@ -355,12 +355,12 @@ int big_uint_overflow_sub(BigUint *a, BigUint b);
  *
  * @example
  * ```
- * BigUint a = big_uint_new(1);
- * BigUint b = big_uint_new(1);
- * int overflow = big_uint_overflow_mul(&a, b);  // Check if multiplying `a` and `b` overflows
+ * BigUint a = biguint_new(1);
+ * BigUint b = biguint_new(1);
+ * int overflow = biguint_overflow_mul(&a, b);  // Check if multiplying `a` and `b` overflows
  * ```
  */
-int big_uint_overflow_mul(BigUint *a, BigUint b);
+int biguint_overflow_mul(BigUint *a, BigUint b);
 
 /**
  * Divides one BigUint by another, storing the quotient and remainder.
@@ -372,13 +372,13 @@ int big_uint_overflow_mul(BigUint *a, BigUint b);
  *
  * @example
  * ```
- * BigUint a = big_uint_new(2);
- * BigUint b = big_uint_new(2);
+ * BigUint a = biguint_new(2);
+ * BigUint b = biguint_new(2);
  * BigUint quot, rem;
- * big_uint_divmod(a, b, &quot, &rem);  // Divide `a` by `b` and store the quotient and remainder
+ * biguint_divmod(a, b, &quot, &rem);  // Divide `a` by `b` and store the quotient and remainder
  * ```
  */
-void big_uint_divmod(BigUint a, BigUint b, BigUint *quot, BigUint *rem);
+void biguint_divmod(BigUint a, BigUint b, BigUint *quot, BigUint *rem);
 
 /**
  * Performs a bitwise AND between two BigUint values.
@@ -388,12 +388,12 @@ void big_uint_divmod(BigUint a, BigUint b, BigUint *quot, BigUint *rem);
  *
  * @example
  * ```
- * BigUint a = big_uint_new(1);
- * BigUint b = big_uint_new(1);
- * big_uint_bitand(&a, b);  // Perform bitwise AND between `a` and `b`
+ * BigUint a = biguint_new(1);
+ * BigUint b = biguint_new(1);
+ * biguint_bitand(&a, b);  // Perform bitwise AND between `a` and `b`
  * ```
  */
-void big_uint_bitand(BigUint *a, BigUint b);
+void biguint_bitand(BigUint *a, BigUint b);
 
 /**
  * Performs a bitwise OR between two BigUint values.
@@ -403,12 +403,12 @@ void big_uint_bitand(BigUint *a, BigUint b);
  *
  * @example
  * ```
- * BigUint a = big_uint_new(1);
- * BigUint b = big_uint_new(1);
- * big_uint_bitor(&a, b);  // Perform bitwise OR between `a` and `b`
+ * BigUint a = biguint_new(1);
+ * BigUint b = biguint_new(1);
+ * biguint_bitor(&a, b);  // Perform bitwise OR between `a` and `b`
  * ```
  */
-void big_uint_bitor(BigUint *a, BigUint b);
+void biguint_bitor(BigUint *a, BigUint b);
 
 /**
  * Performs a bitwise XOR between two BigUint values.
@@ -418,12 +418,12 @@ void big_uint_bitor(BigUint *a, BigUint b);
  *
  * @example
  * ```
- * BigUint a = big_uint_new(1);
- * BigUint b = big_uint_new(1);
- * big_uint_bitxor(&a, b);  // Perform bitwise XOR between `a` and `b`
+ * BigUint a = biguint_new(1);
+ * BigUint b = biguint_new(1);
+ * biguint_bitxor(&a, b);  // Perform bitwise XOR between `a` and `b`
  * ```
  */
-void big_uint_bitxor(BigUint *a, BigUint b);
+void biguint_bitxor(BigUint *a, BigUint b);
 
 /**
  * Performs a bitwise NOT on a BigUint value.
@@ -432,11 +432,11 @@ void big_uint_bitxor(BigUint *a, BigUint b);
  *
  * @example
  * ```
- * BigUint a = big_uint_new(1);
- * big_uint_bitnot(&a);  // Perform bitwise NOT on `a`
+ * BigUint a = biguint_new(1);
+ * biguint_bitnot(&a);  // Perform bitwise NOT on `a`
  * ```
  */
-void big_uint_bitnot(BigUint *a);
+void biguint_bitnot(BigUint *a);
 
 /**
  * Performs a right shift (logical shift) on a BigUint value.
@@ -446,11 +446,11 @@ void big_uint_bitnot(BigUint *a);
  *
  * @example
  * ```
- * BigUint a = big_uint_new(1);
- * big_uint_shr(&a, 2);  // Perform a logical right shift by 2 positions
+ * BigUint a = biguint_new(1);
+ * biguint_shr(&a, 2);  // Perform a logical right shift by 2 positions
  * ```
  */
-void big_uint_shr(BigUint *a, int shift);
+void biguint_shr(BigUint *a, int shift);
 
 /**
  * Performs a left shift on a BigUint value.
@@ -460,11 +460,11 @@ void big_uint_shr(BigUint *a, int shift);
  *
  * @example
  * ```
- * BigUint a = big_uint_new(1);
- * big_uint_shl(&a, 2);  // Perform a left shift by 2 positions
+ * BigUint a = biguint_new(1);
+ * biguint_shl(&a, 2);  // Perform a left shift by 2 positions
  * ```
  */
-void big_uint_shl(BigUint *b, int shift);
+void biguint_shl(BigUint *b, int shift);
 
 /**
  * Debugging: Prints a raw representation of a BigUint value (binary).
@@ -473,11 +473,11 @@ void big_uint_shl(BigUint *b, int shift);
  *
  * @example
  * ```
- * BigUint a = big_uint_new(1);
- * big_uint_raw_println(a);  // Print raw binary representation of `a`
+ * BigUint a = biguint_new(1);
+ * biguint_raw_println(a);  // Print raw binary representation of `a`
  * ```
  */
-void big_uint_raw_println(BigUint a);
+void biguint_raw_println(BigUint a);
 
 /**
  * Debugging: Prints a raw representation of a BigUint value (binary, no newline).
@@ -486,11 +486,11 @@ void big_uint_raw_println(BigUint a);
  *
  * @example
  * ```
- * BigUint a = big_uint_new(1);
- * big_uint_raw_print(a);  // Print raw binary representation of `a`
+ * BigUint a = biguint_new(1);
+ * biguint_raw_print(a);  // Print raw binary representation of `a`
  * ```
  */
-void big_uint_raw_print(BigUint a);
+void biguint_raw_print(BigUint a);
 
 /**
  * Debugging: Prints a human-readable representation of a BigUint value.
@@ -499,11 +499,11 @@ void big_uint_raw_print(BigUint a);
  *
  * @example
  * ```
- * BigUint a = big_uint_new(1);
- * big_uint_println(a);  // Print a human-readable representation of `a`
+ * BigUint a = biguint_new(1);
+ * biguint_println(a);  // Print a human-readable representation of `a`
  * ```
  */
-void big_uint_println(BigUint a);
+void biguint_println(BigUint a);
 
 /**
  * Debugging: Prints a human-readable representation of a BigUint value (no newline).
@@ -512,10 +512,10 @@ void big_uint_println(BigUint a);
  *
  * @example
  * ```
- * BigUint a = big_uint_new(1);
- * big_uint_print(a);  // Print a human-readable representation of `a`
+ * BigUint a = biguint_new(1);
+ * biguint_print(a);  // Print a human-readable representation of `a`
  * ```
  */
-void big_uint_print(BigUint a);
+void biguint_print(BigUint a);
 
 #endif
