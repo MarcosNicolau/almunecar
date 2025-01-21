@@ -80,8 +80,8 @@
  * with the limbs from the BigUint.
  * ```
  */
-#define DEFINE_UINT_FROM_BIG_UINT(NAME, WORDS)                                                                         \
-    NAME NAME##_from_big_uint(BigUint a) {                                                                             \
+#define DEFINE_UINT_FROM_BIGUINT(NAME, WORDS)                                                                          \
+    NAME NAME##_from_biguint(BigUint a) {                                                                              \
         u256 result = u256_from_limbs(a.limbs, a.size);                                                                \
         return result;                                                                                                 \
     }
@@ -124,8 +124,8 @@
 #define DEFINE_UINT_OVERFLOW_ADD(NAME, WORDS)                                                                          \
     NAME##_overflow_op NAME##_overflow_add(NAME a, NAME b) {                                                           \
         BigUint result = uint_to_biguint(a);                                                                           \
-        int overflow = big_uint_overflow_add(&result, uint_to_biguint(b));                                             \
-        return (NAME##_overflow_op){.res = NAME##_from_big_uint(result), .overflow = overflow};                        \
+        int overflow = biguint_overflow_add(&result, uint_to_biguint(b));                                              \
+        return (NAME##_overflow_op){.res = NAME##_from_biguint(result), .overflow = overflow};                         \
     }
 
 /**                                                                                                                    \
@@ -136,8 +136,8 @@
 #define DEFINE_UINT_OVERFLOW_SUB(NAME, WORDS)                                                                          \
     NAME##_overflow_op NAME##_overflow_sub(NAME a, NAME b) {                                                           \
         BigUint result = uint_to_biguint(a);                                                                           \
-        int overflow = big_uint_overflow_sub(&result, uint_to_biguint(b));                                             \
-        return (NAME##_overflow_op){.res = NAME##_from_big_uint(result), .overflow = overflow};                        \
+        int overflow = biguint_overflow_sub(&result, uint_to_biguint(b));                                              \
+        return (NAME##_overflow_op){.res = NAME##_from_biguint(result), .overflow = overflow};                         \
     }
 
 /**
@@ -148,8 +148,8 @@
 #define DEFINE_UINT_BITAND(NAME, WORDS)                                                                                \
     NAME NAME##_bitand(NAME a, NAME b) {                                                                               \
         BigUint result = uint_to_biguint(a);                                                                           \
-        big_uint_bitand(&result, uint_to_biguint(b));                                                                  \
-        return NAME##_from_big_uint(result);                                                                           \
+        biguint_bitand(&result, uint_to_biguint(b));                                                                   \
+        return NAME##_from_biguint(result);                                                                            \
     }
 
 /**
@@ -160,8 +160,8 @@
 #define DEFINE_UINT_BITOR(NAME, WORDS)                                                                                 \
     NAME NAME##_bitor(NAME a, NAME b) {                                                                                \
         BigUint result = uint_to_biguint(a);                                                                           \
-        big_uint_bitor(&result, uint_to_biguint(b));                                                                   \
-        return NAME##_from_big_uint(result);                                                                           \
+        biguint_bitor(&result, uint_to_biguint(b));                                                                    \
+        return NAME##_from_biguint(result);                                                                            \
     }
 
 /**                                                                                                                    \
@@ -172,8 +172,8 @@
 #define DEFINE_UINT_BITXOR(NAME, WORDS)                                                                                \
     NAME NAME##_bitxor(NAME a, NAME b) {                                                                               \
         BigUint result = uint_to_biguint(a);                                                                           \
-        big_uint_bitxor(&result, uint_to_biguint(b));                                                                  \
-        return NAME##_from_big_uint(result);                                                                           \
+        biguint_bitxor(&result, uint_to_biguint(b));                                                                   \
+        return NAME##_from_biguint(result);                                                                            \
     }
 /**                                                                                                                    \
  * Performs a bitwise NOT operation.                                                                                   \
@@ -183,8 +183,8 @@
 #define DEFINE_UINT_BITNOT(NAME, WORDS)                                                                                \
     NAME NAME##_bitnot(NAME a) {                                                                                       \
         BigUint result = uint_to_biguint(a);                                                                           \
-        big_uint_bitnot(&result);                                                                                      \
-        return NAME##_from_big_uint(result);                                                                           \
+        biguint_bitnot(&result);                                                                                       \
+        return NAME##_from_biguint(result);                                                                            \
     }
 /** \
  * Multiplies two unsigned integers and detects overflow. \
@@ -194,8 +194,8 @@
 #define DEFINE_UINT_OVERFLOW_MUL(NAME, WORDS)                                                                          \
     NAME##_overflow_op NAME##_overflow_mul(NAME a, NAME b) {                                                           \
         BigUint result = uint_to_biguint(a);                                                                           \
-        int overflow = big_uint_overflow_mul(&result, uint_to_biguint(b));                                             \
-        return (NAME##_overflow_op){.res = NAME##_from_big_uint(result), .overflow = overflow};                        \
+        int overflow = biguint_overflow_mul(&result, uint_to_biguint(b));                                              \
+        return (NAME##_overflow_op){.res = NAME##_from_biguint(result), .overflow = overflow};                         \
     }
 
 /** \
@@ -204,7 +204,7 @@
  * Returns the number of bits required to represent `a`. \
  */
 #define DEFINE_UINT_BITS(NAME, WORDS)                                                                                  \
-    int NAME##_bits(NAME a) { return big_uint_bits(uint_to_biguint(a)); }
+    int NAME##_bits(NAME a) { return biguint_bits(uint_to_biguint(a)); }
 
 /** \
  * Shifts the unsigned integer left by the specified number of bits. \
@@ -214,8 +214,8 @@
 #define DEFINE_UINT_SHL(NAME, WORDS)                                                                                   \
     NAME NAME##_shl(NAME a, int shift) {                                                                               \
         BigUint result = uint_to_biguint(a);                                                                           \
-        big_uint_shl(&result, shift);                                                                                  \
-        return NAME##_from_big_uint(result);                                                                           \
+        biguint_shl(&result, shift);                                                                                   \
+        return NAME##_from_biguint(result);                                                                            \
     }
 
 /** \
@@ -226,8 +226,8 @@
 #define DEFINE_UINT_SHR(NAME, WORDS)                                                                                   \
     NAME NAME##_shr(NAME a, int shift) {                                                                               \
         BigUint result = uint_to_biguint(a);                                                                           \
-        big_uint_shr(&result, shift);                                                                                  \
-        return NAME##_from_big_uint(result);                                                                           \
+        biguint_shr(&result, shift);                                                                                   \
+        return NAME##_from_biguint(result);                                                                            \
     }
 
 /** \
@@ -238,10 +238,10 @@
  */
 #define DEFINE_UINT_DIV_MOD(NAME, WORDS)                                                                               \
     NAME##_div_op NAME##_divmod(NAME a, NAME b) {                                                                      \
-        BigUint quot = big_uint_new(WORDS);                                                                            \
-        BigUint rem = big_uint_new(WORDS);                                                                             \
-        big_uint_divmod(uint_to_biguint(a), uint_to_biguint(b), &quot, &rem);                                          \
-        return (NAME##_div_op){.quot = NAME##_from_big_uint(quot), .rem = NAME##_from_big_uint(rem)};                  \
+        BigUint quot = biguint_new(WORDS);                                                                             \
+        BigUint rem = biguint_new(WORDS);                                                                              \
+        biguint_divmod(uint_to_biguint(a), uint_to_biguint(b), &quot, &rem);                                           \
+        return (NAME##_div_op){.quot = NAME##_from_biguint(quot), .rem = NAME##_from_biguint(rem)};                    \
     }
 
 #define DEFINE_UINT_ZERO(NAME, WORDS)                                                                                  \
@@ -257,40 +257,40 @@
  */
 #define DEFINE_UINT_FROM_DEC_STRING(NAME, WORDS)                                                                       \
     NAME NAME##_from_dec_string(char *str) {                                                                           \
-        BigUint result = big_uint_new(WORDS);                                                                          \
-        big_uint_from_dec_string(str, &result);                                                                        \
-        return NAME##_from_big_uint(result);                                                                           \
+        BigUint result = biguint_new(WORDS);                                                                           \
+        biguint_from_dec_string(str, &result);                                                                         \
+        return NAME##_from_biguint(result);                                                                            \
     }
 
 #define DEFINE_UINT_FROM_U64(NAME, WORDS)                                                                              \
     NAME NAME##_from_u64(uint64_t a) {                                                                                 \
-        BigUint result = big_uint_new(WORDS);                                                                          \
-        big_uint_from_u64(a, &result);                                                                                 \
-        return NAME##_from_big_uint(result);                                                                           \
+        BigUint result = biguint_new(WORDS);                                                                           \
+        biguint_from_u64(a, &result);                                                                                  \
+        return NAME##_from_biguint(result);                                                                            \
     }
 
 #define DEFINE_UINT_FROM_BYTES_BIG_ENDIAN(NAME, WORDS)                                                                 \
     NAME NAME##_from_bytes_big_endian(uint8_t *bytes) {                                                                \
-        BigUint result = big_uint_new(WORDS);                                                                          \
-        big_uint_from_bytes_big_endian(bytes, &result);                                                                \
-        return NAME##_from_big_uint(result);                                                                           \
+        BigUint result = biguint_new(WORDS);                                                                           \
+        biguint_from_bytes_big_endian(bytes, &result);                                                                 \
+        return NAME##_from_biguint(result);                                                                            \
     }
 
 #define DEFINE_UINT_GET_BYTES_BIG_ENDIAN(NAME, WORDS)                                                                  \
     void NAME##_get_bytes_big_endian(uint8_t *buffer, NAME value) {                                                    \
-        big_uint_get_bytes_big_endian(uint_to_biguint(value), buffer);                                                 \
+        biguint_get_bytes_big_endian(uint_to_biguint(value), buffer);                                                  \
     }
 
 #define DEFINE_UINT_FROM_BYTES_LITTLE_ENDIAN(NAME, WORDS)                                                              \
     NAME NAME##_from_bytes_little_endian(uint8_t bytes[32]) {                                                          \
-        BigUint result = big_uint_new(WORDS);                                                                          \
-        big_uint_from_bytes_little_endian(bytes, &result);                                                             \
-        return NAME##_from_big_uint(result);                                                                           \
+        BigUint result = biguint_new(WORDS);                                                                           \
+        biguint_from_bytes_little_endian(bytes, &result);                                                              \
+        return NAME##_from_biguint(result);                                                                            \
     }
 
 #define DEFINE_UINT_GET_BYTES_LITTLE_ENDIAN(NAME, WORDS)                                                               \
     void NAME##_get_bytes_little_endian(uint8_t *buffer, NAME value) {                                                 \
-        big_uint_get_bytes_little_endian(uint_to_biguint(value), buffer);                                              \
+        biguint_get_bytes_little_endian(uint_to_biguint(value), buffer);                                               \
     }
 
 #define DEFINE_UINT_ONE(NAME, WORDS)                                                                                   \
@@ -307,7 +307,7 @@
  * sure to free the pointer after using it.
  */
 #define DEFINE_UINT_TO_STRING(NAME, WORDS)                                                                             \
-    char *NAME##_to_dec_string(NAME a) { return big_uint_to_dec_string(uint_to_biguint(a)); }
+    char *NAME##_to_dec_string(NAME a) { return biguint_to_dec_string(uint_to_biguint(a)); }
 
 /**
  * @def DEFINE_UINT_COMPARE(NAME, WORDS)
@@ -329,32 +329,32 @@
  * - Returns `1` if `a > b`
  */
 #define DEFINE_UINT_COMPARE(NAME, WORDS)                                                                               \
-    int NAME##_cmp(NAME a, NAME b) { return big_uint_cmp(uint_to_biguint(a), uint_to_biguint(b)); }
+    int NAME##_cmp(NAME a, NAME b) { return biguint_cmp(uint_to_biguint(a), uint_to_biguint(b)); }
 
 /**                                                                                                                    \
  * Prints an array-like format of the internal                                                                         \
  * `parts` array of the `NAME` structure.                                                                              \
  */                                                                                                                    \
 #define DEFINE_UINT_RAW_PRINTLN(NAME, WORDS)                                                                           \
-    void NAME##_raw_println(NAME a) { big_uint_raw_println(uint_to_biguint(a)); }
+    void NAME##_raw_println(NAME a) { biguint_raw_println(uint_to_biguint(a)); }
 
 /**                                                                                                                    \
  * Print the string representation of the structure followed by a newline.                                             \
  */                                                                                                                    \
 #define DEFINE_UINT_RAW_PRINT(NAME, WORDS)                                                                             \
-    void NAME##_raw_print(NAME a) { big_uint_raw_print(uint_to_biguint(a)); }
+    void NAME##_raw_print(NAME a) { biguint_raw_print(uint_to_biguint(a)); }
 
 /**                                                                                                                    \
  * Print the string representation of the structure.                                                                   \
  */                                                                                                                    \
 #define DEFINE_UINT_PRINTLN(NAME, WORDS)                                                                               \
-    void NAME##_println(NAME a) { big_uint_println(uint_to_biguint(a)); }
+    void NAME##_println(NAME a) { biguint_println(uint_to_biguint(a)); }
 
 /**                                                                                                                    \
  * Print the string representation of the structure.                                                                   \
  */                                                                                                                    \
 #define DEFINE_UINT_PRINT(NAME, WORDS)                                                                                 \
-    void NAME##_print(NAME a) { big_uint_print(uint_to_biguint(a)); }
+    void NAME##_print(NAME a) { biguint_print(uint_to_biguint(a)); }
 /**
  * Given the UINT `a`
  * Returns:
@@ -362,7 +362,7 @@
  * - 0 otherwise.
  */
 #define DEFINE_UINT_IS_ZERO(NAME)                                                                                      \
-    int NAME##_is_zero(NAME a) { return big_uint_is_zero(uint_to_biguint(a)); }
+    int NAME##_is_zero(NAME a) { return biguint_is_zero(uint_to_biguint(a)); }
 
 #define DEFINE_UINT(NAME, WORDS)                                                                                       \
     DEFINE_UINT_DATA_TYPE(NAME, WORDS)                                                                                 \
@@ -370,7 +370,7 @@
     DEFINE_UINT_DIV_OP(NAME)                                                                                           \
     DEFINE_UINT_ZERO(NAME, WORDS)                                                                                      \
     DEFINE_UINT_FROM_LIMBS(NAME, WORDS)                                                                                \
-    DEFINE_UINT_FROM_BIG_UINT(NAME, WORDS)                                                                             \
+    DEFINE_UINT_FROM_BIGUINT(NAME, WORDS)                                                                              \
     DEFINE_UINT_OVERFLOW_ADD(NAME, WORDS)                                                                              \
     DEFINE_UINT_COMPARE(NAME, WORDS)                                                                                   \
     DEFINE_UINT_RAW_PRINTLN(NAME, WORDS)                                                                               \
