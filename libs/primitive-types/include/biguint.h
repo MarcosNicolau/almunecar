@@ -55,6 +55,21 @@ typedef struct {
     (BigUint) { .size = (SIZE), .limbs = (uint64_t[SIZE])__VA_ARGS__ } // Initialize with custom values
 
 /**
+ * Creates a `BigUint` on the stack with a specified number of limbs and initializes them with given values.
+ *
+ * @param SIZE The number of limbs (64-bit integers) for the `BigUint`.
+ * @param {1, 2, 3, ...} The values for initializing the limbs of the `BigUint`.
+ *
+ * @example
+ * ```
+ * BigUint num = big_uint_new_with_limbs(3, {10, 20, 30});  // Creates a BigUint with 3 limbs, initialized to 10, 20,
+ * and 30
+ * ```
+ */
+#define big_uint_new_from_limbs(SIZE, LIMBS)                                                                           \
+    (BigUint) { .size = (SIZE), .limbs = LIMBS } // Initialize with custom values
+
+/**
  * Sets the value of the BigUint to zero.
  *
  * @param out Pointer to the BigUint to be zeroed.
