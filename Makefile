@@ -37,17 +37,21 @@ build: headers $(patsubst %, $(LIB_BUILD_DIR)/lib%.so, $(LIBS)) ## Build all lib
 install: headers_install $(patsubst %, $(INSTALL_LIB_DIR)/libalmunecar_%.so, $(LIBS)) ## Build all libraries
 
 # Build shared library for each lib into build directory
-$(LIB_BUILD_DIR)/lib%.so: libs/%/src/*.c | $(LIB_BUILD_DIR) $(OBJ_BUILD_DIR)
+$(LIB_BUILD_DIR)/lib%.so: $(OBJ_BUILD_DIR)/% | $(LIB_BUILD_DIR) $(OBJ_BUILD_DIR)
 	$(eval include libs/$*/deps.mk)
-	@$(CC) $(CFLAGS) -Ilibs/$*/$(INCLUDE_DIR) -I$(INCLUDE_BUILD_DIR) \
-		-c $^ -o $(OBJ_BUILD_DIR)/$*_objs.o
-	@$(CC) $(LDFLAGS) -L$(LIB_BUILD_DIR) $(patsubst %, -l%, $(DEPS)) -o $@ $(OBJ_BUILD_DIR)/$*_objs.o
+	@$(CC) $(LDFLAGS) -L$(LIB_BUILD_DIR) $(patsubst %, -l%, $(DEPS)) -o $@ $(wildcard $(OBJ_BUILD_DIR)/$*/*.o)
 
-# Build shared library for each lib into /usr/local/lib directory
-$(INSTALL_LIB_DIR)/libalmunecar_%.so: libs/%/src/*.c
-	@$(CC) $(CFLAGS) -Ilibs/$*/$(INCLUDE_DIR) -I$(INSTALL_INCLUDE_DIR) \
-		-c $^ -o $(OBJ_BUILD_DIR)/$*_objs.o
-	@$(CC) $(LDFLAGS) -o $@ $(OBJ_BUILD_DIR)/$*_objs.o
+# Build objects of each library into build dir
+$(OBJ_BUILD_DIR)/%: 
+	@mkdir -p $@
+	@for file in libs/$*/$(SRC_DIR)/*.c; do \
+		$(CC) $(CFLAGS) -Ilibs/$*/$(INCLUDE_DIR) -I$(INCLUDE_BUILD_DIR) -c libs/$*/$(SRC_DIR)/$$(basename $$file) -o $@/$$(basename $$file .c).o; \
+	done
+
+# Build shared library for each lib into INSTALL_LIB_DIR directory
+$(INSTALL_LIB_DIR)/libalmunecar_%.so: $(OBJ_BUILD_DIR)/%
+	$(eval include libs/$*/deps.mk)
+	@$(CC) $(LDFLAGS) -L$(INSTALL_LIB_DIR) $(patsubst %, -l%, $(DEPS)) -o $@ $(wildcard $(OBJ_BUILD_DIR)/$*/*.o)
 
 # Create necessary directories
 $(LIB_BUILD_DIR) $(INCLUDE_BUILD_DIR) $(OBJ_BUILD_DIR) $(TESTS_BUILD_DIR):
