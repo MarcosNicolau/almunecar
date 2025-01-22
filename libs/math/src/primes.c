@@ -15,7 +15,7 @@ int big_uint_is_prime(BigUint a) {
 
     for (int i = 0; i < PRIMES_LENGTH; i++) {
         // if a < p and we are at this point, a is 100% prime
-        if (biguint_cmp(a, p) != -1) {
+        if (biguint_cmp(a, p) < 0) {
             biguint_free(&p, &rem) return 1;
         }
 
@@ -61,7 +61,7 @@ int biguint_is_prime_solovay_strassen(BigUint p) {
         biguint_random(&a);
         biguint_mod(a, p, &rem);
         // check that a is not divisible by p and a < p
-        if (biguint_is_zero(rem) && biguint_cmp(a, p) != -1) {
+        if (biguint_is_zero(rem) && biguint_cmp(a, p) < 0) {
             // don't count the iteration
             i--;
             continue;
