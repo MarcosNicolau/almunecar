@@ -27,6 +27,23 @@ typedef struct {
     (BigUint) { .size = (SIZE), .limbs = malloc(sizeof(uint64_t) * (SIZE)) }
 
 /**
+ * Frees the memory allocated for one or more BigUint variables.
+ *
+ * @param ... Variadic arguments of BigUint pointers to be freed.
+ *
+ * @example
+ * ```
+ * BigUint a = biguint_new(10);
+ * BigUint b = biguint_new(20);
+ * biguint_free(&a, &b);  // Frees memory for `a` and `b`
+ * ```
+ */
+#define biguint_free(...)                                                                                              \
+    BigUint *args[] = {__VA_ARGS__};                                                                                   \
+    for (size_t i = 0; i < sizeof(args) / sizeof(args[0]); i++)                                                        \
+        biguint_free_limbs(args[i]);
+
+/**
  * Creates a `BigUint` on the stack with a specified number of limbs, all initialized to 0.
  *
  * @param SIZE The number of limbs (64-bit integers) for the `BigUint`.
@@ -363,6 +380,37 @@ int biguint_overflow_sub(BigUint *a, BigUint b);
 int biguint_overflow_mul(BigUint *a, BigUint b);
 
 /**
+ * Computes the power of a BigUint to an exponent and checks for overflow.
+ *
+ * @param a Pointer to the base (BigUint).
+ * @param exponent The exponent (BigUint).
+ * @return Returns 1 if the operation overflows, 0 otherwise.
+ *
+ * @example
+ * ```
+ * BigUint base = biguint_new(2);
+ * BigUint exponent = biguint_new(1000);
+ * int has_overflowed = biguint_overflow_pow(&base, exponent);
+ * ```
+ */
+int biguint_overflow_pow(BigUint *a, BigUint exponent);
+
+/**
+ * Computes the power of a BigUint raised to an exponent.
+ *
+ * @param a Pointer to the base (BigUint). The result is stored in this variable.
+ * @param exponent The exponent (BigUint).
+ *
+ * @example
+ * ```
+ * BigUint base = biguint_new(2);
+ * BigUint exponent = biguint_new(10);
+ * biguint_pow(&base, exponent);  // `base` is now 1024
+ * ```
+ */
+void biguint_pow(BigUint *a, BigUint exponent);
+
+/**
  * Divides one BigUint by another, storing the quotient and remainder.
  *
  * @param a The dividend (BigUint).
@@ -379,6 +427,57 @@ int biguint_overflow_mul(BigUint *a, BigUint b);
  * ```
  */
 void biguint_divmod(BigUint a, BigUint b, BigUint *quot, BigUint *rem);
+
+/**
+ * Computes the quotient of one BigUint divided by another.
+ *
+ * @param a The dividend (BigUint).
+ * @param b The divisor (BigUint).
+ * @param out Pointer to store the quotient.
+ *
+ * @example
+ * ```
+ * BigUint a = biguint_new(10);
+ * BigUint b = biguint_new(2);
+ * BigUint quot;
+ * biguint_div(a, b, &quot);  // Quotient `quot` will be 5
+ * ```
+void biguint_div(BigUint a, BigUint b, BigUint *out);
+
+/**
+ * Computes the remainder of one BigUint divided by another.
+ *
+ * @param a The dividend (BigUint).
+ * @param b The divisor (BigUint).
+ * @param out Pointer to store the remainder.
+ *
+ * @example
+ * ```
+ * BigUint a = biguint_new(10);
+ * BigUint b = biguint_new(3);
+ * BigUint rem;
+ * biguint_mod(a, b, &rem);  // Remainder `rem` will be 1
+ * ```
+ */
+void biguint_mod(BigUint a, BigUint b, BigUint *out);
+
+/**
+ * Checks if a BigUint is even.
+ *
+ * @param a The BigUint to check.
+ * @return Returns 1 if `a` is even, 0 otherwise.
+ *
+ * @example
+ * ```
+ * BigUint num = biguint_new(10);
+ * if (biguint_is_even(num)) {
+ *     printf("The number is even.\n");
+ * } else {
+ *     printf("The number is odd.\n");
+ * }
+ * ```
+ */
+int biguint_is_even(BigUint a);
 
 /**
  * Performs a bitwise AND between two BigUint values.

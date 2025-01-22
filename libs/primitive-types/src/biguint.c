@@ -28,8 +28,17 @@ void biguint_from_u64(uint64_t a, BigUint *out) {
 }
 
 void biguint_cpy(BigUint *dst, BigUint src) {
+    int limit;
+    if (dst->size > src.size)
+        limit = src.size;
+    else
+        src.size;
+
     for (int i = 0; i < dst->size; i++) {
-        dst->limbs[i] = src.limbs[i];
+        if (i < limit)
+            dst->limbs[i] = src.limbs[i];
+        else
+            dst->limbs[i] = 0;
     }
 }
 
@@ -222,11 +231,42 @@ int biguint_overflow_mul(BigUint *a, BigUint b) {
     return overflow;
 };
 
+// https://en.wikipedia.org/wiki/Exponentiation_by_squaring
+int biguint_overflow_pow(BigUint *a, BigUint exponent) {
+    if (biguint_is_zero(exponent)) {
+        biguint_one(&a);
+        return 0;
+    }
+
+    int overflow = 0;
+    BigUint one = biguint_new_heap(a->size);
+    BigUint y = biguint_new_heap(a->size);
+    biguint_one(&y);
+    biguint_one(&one);
+
+    while (biguint_cmp(exponent, one) > 0) {
+        if (biguint_is_even(*a)) {
+            overflow = biguint_overflow_mul(&a, *a);
+            biguint_shr(&exponent, 1);
+        } else {
+            overflow = biguint_overflow_mul(&y, *a);
+            overflow = biguint_overflow_mul(&a, *a);
+            biguint_sub(&exponent, one);
+            biguint_shr(&exponent, 1);
+        }
+    }
+
+    biguint_free(&one, &y);
+    return overflow;
+}
+
 void biguint_add(BigUint *a, BigUint b) { biguint_overflow_add(a, b); }
 
 void biguint_sub(BigUint *a, BigUint b) { biguint_overflow_sub(a, b); }
 
 void biguint_mul(BigUint *a, BigUint b) { biguint_overflow_mul(a, b); }
+
+void biguint_pow(BigUint *a, BigUint exponent) { biguint_overflow_pow(a, exponent); }
 
 void biguint_bitand(BigUint *a, BigUint b) {
     for (int i = 0; i < a->size; i++)
@@ -319,6 +359,20 @@ void biguint_divmod(BigUint a, BigUint b, BigUint *quot, BigUint *rem) {
 
     biguint_free_limbs(&shift_copy);
 }
+
+void biguint_div(BigUint a, BigUint b, BigUint *out) {
+    BigUint rem = biguint_new_heap(out->size);
+    biguint_divmod(a, b, out, &rem);
+    biguint_free_limbs(&rem);
+}
+
+void biguint_mod(BigUint a, BigUint b, BigUint *out) {
+    BigUint quot = biguint_new_heap(out->size);
+    biguint_divmod(a, b, &quot, out);
+    biguint_free_limbs(&quot);
+}
+
+int biguint_is_even(BigUint a) { return a.limbs[0] & 1 == 0; }
 
 /**
  * Debugging
