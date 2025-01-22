@@ -1,7 +1,7 @@
 # Project settings
 PROJECT_NAME = almunecar
 BUILD_DIR = build
-LIBS = utils primitive-types hashes # List of libraries in dependency order
+LIBS = utils primitive-types math hashes # List of libraries in dependency order
 SRC_DIR = src
 INCLUDE_DIR = include
 TEST_DIR = tests
@@ -33,6 +33,8 @@ help:
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 build: headers $(patsubst %, $(LIB_BUILD_DIR)/lib%.so, $(LIBS)) ## Build all libraries
+
+build_%: headers $(LIB_BUILD_DIR)/lib%.so
 
 install: headers_install $(patsubst %, $(INSTALL_LIB_DIR)/libalmunecar_%.so, $(LIBS)) ## Build all libraries
 
