@@ -34,7 +34,9 @@ help:
 
 build: headers $(patsubst %, $(LIB_BUILD_DIR)/lib%.so, $(LIBS)) ## Build all libraries
 
-build_%: headers $(LIB_BUILD_DIR)/lib%.so
+build_%: 
+	@$(MAKE) headers_$*
+	@$(MAKE) $(LIB_BUILD_DIR)/lib$*.so
 
 install: headers_install $(patsubst %, $(INSTALL_LIB_DIR)/libalmunecar_%.so, $(LIBS)) ## Build all libraries
 
@@ -62,9 +64,13 @@ $(LIB_BUILD_DIR) $(INCLUDE_BUILD_DIR) $(OBJ_BUILD_DIR) $(TESTS_BUILD_DIR):
 # Copy headers to the include directory
 headers: $(INCLUDE_BUILD_DIR)
 	@for lib in $(LIBS); do \
-		mkdir -p $(INCLUDE_BUILD_DIR)/$$lib; \
-		cp libs/$$lib/$(INCLUDE_DIR)/*.h $(INCLUDE_BUILD_DIR)/$$lib/; \
+		$(MAKE) headers_$$lib; \
 	done
+
+headers_%: $(INCLUDE_BUILD_DIR)
+	@mkdir -p $(INCLUDE_BUILD_DIR)/$*
+	@cp libs/$*/$(INCLUDE_DIR)/*.h $(INCLUDE_BUILD_DIR)/$*/
+
 
 # Copy headers to the include directory in /usr/local/include/almunecar
 headers_install:

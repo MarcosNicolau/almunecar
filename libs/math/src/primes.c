@@ -1,15 +1,18 @@
 #include <math/random.h>
 #include <primes.h>
 
+int biguint_is_prime_solovay_strassen(BigUint p);
+int jacobi(BigUint a, BigUint n);
+
 void biguint_random_prime(BigUint *a) {
-    while (!biguint_is_primen(*a)) {
+    while (!biguint_is_prime(*a)) {
         biguint_random(a);
     }
 };
 
 // Verifies if a number is prime by dividing it by the first 1000 primes
 // If it passes the initial test, then we run a more strong and probable primality test
-int big_uint_is_prime(BigUint a) {
+int biguint_is_prime(BigUint a) {
     BigUint p = biguint_new_heap(a.size);
     BigUint rem = biguint_new_heap(a.size);
 
@@ -71,7 +74,7 @@ int biguint_is_prime_solovay_strassen(BigUint p) {
         biguint_pow(&a, exponent);
         biguint_mod(a, p, &rem);
 
-        if (rem.limbs[0] != j)
+        if (rem.limbs[0] != (uint64_t)j)
             return 0;
     }
 
@@ -131,7 +134,8 @@ int jacobi(BigUint a, BigUint n) {
 
     if (biguint_is_even(a)) {
         biguint_cpy(&exponent, n);
-        biguint_pow(&exponent, 2);
+        biguint_from_u64(2, &num);
+        biguint_pow(&exponent, num);
         biguint_from_u64(1, &num);
         biguint_sub(&exponent, num);
         biguint_from_u64(8, &num);
@@ -147,7 +151,7 @@ int jacobi(BigUint a, BigUint n) {
         biguint_from_u64(2, &num);
         biguint_div(a, num, &next);
 
-        result = jacobi(next, n);
+        result = calc * jacobi(next, n);
 
     } else {
         biguint_cpy(&exponent, a);
@@ -169,7 +173,7 @@ int jacobi(BigUint a, BigUint n) {
 
         biguint_mod(n, a, &next);
 
-        result = jacobi(next, a);
+        result = calc * jacobi(next, a);
     }
 
     biguint_free(&exponent, &exponent_two, &exp_result, &next, &num);

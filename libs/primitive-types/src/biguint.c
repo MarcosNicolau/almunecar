@@ -28,11 +28,9 @@ void biguint_from_u64(uint64_t a, BigUint *out) {
 }
 
 void biguint_cpy(BigUint *dst, BigUint src) {
-    int limit;
+    int limit = dst->size;
     if (dst->size > src.size)
         limit = src.size;
-    else
-        src.size;
 
     for (int i = 0; i < dst->size; i++) {
         if (i < limit)
@@ -234,7 +232,7 @@ int biguint_overflow_mul(BigUint *a, BigUint b) {
 // https://en.wikipedia.org/wiki/Exponentiation_by_squaring
 int biguint_overflow_pow(BigUint *a, BigUint exponent) {
     if (biguint_is_zero(exponent)) {
-        biguint_one(&a);
+        biguint_one(a);
         return 0;
     }
 
@@ -246,11 +244,11 @@ int biguint_overflow_pow(BigUint *a, BigUint exponent) {
 
     while (biguint_cmp(exponent, one) > 0) {
         if (biguint_is_even(*a)) {
-            overflow = biguint_overflow_mul(&a, *a);
+            overflow = biguint_overflow_mul(a, *a);
             biguint_shr(&exponent, 1);
         } else {
             overflow = biguint_overflow_mul(&y, *a);
-            overflow = biguint_overflow_mul(&a, *a);
+            overflow = biguint_overflow_mul(a, *a);
             biguint_sub(&exponent, one);
             biguint_shr(&exponent, 1);
         }
@@ -372,7 +370,7 @@ void biguint_mod(BigUint a, BigUint b, BigUint *out) {
     biguint_free_limbs(&quot);
 }
 
-int biguint_is_even(BigUint a) { return a.limbs[0] & 1 == 0; }
+int biguint_is_even(BigUint a) { return (a.limbs[0] & 1) == 0; }
 
 /**
  * Debugging
