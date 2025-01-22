@@ -442,6 +442,7 @@ void biguint_divmod(BigUint a, BigUint b, BigUint *quot, BigUint *rem);
  * BigUint quot;
  * biguint_div(a, b, &quot);  // Quotient `quot` will be 5
  * ```
+ */
 void biguint_div(BigUint a, BigUint b, BigUint *out);
 
 /**
