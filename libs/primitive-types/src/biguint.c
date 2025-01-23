@@ -243,16 +243,18 @@ int biguint_overflow_pow(BigUint *a, BigUint exponent) {
     biguint_one(&one);
 
     while (biguint_cmp(exponent, one) > 0) {
-        if (biguint_is_even(*a)) {
-            overflow = biguint_overflow_mul(a, *a);
+        if (biguint_is_even(exponent)) {
+            overflow |= biguint_overflow_mul(a, *a);
             biguint_shr(&exponent, 1);
         } else {
-            overflow = biguint_overflow_mul(&y, *a);
-            overflow = biguint_overflow_mul(a, *a);
+            overflow |= biguint_overflow_mul(&y, *a);
+            overflow |= biguint_overflow_mul(a, *a);
             biguint_sub(&exponent, one);
             biguint_shr(&exponent, 1);
         }
     }
+
+    overflow |= biguint_overflow_mul(a, y);
 
     biguint_free(&one, &y);
     return overflow;
