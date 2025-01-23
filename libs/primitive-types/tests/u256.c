@@ -63,6 +63,27 @@ void test_u256_overflow_mul_with_overflow() {
     assert_that(result.overflow == 1);
 }
 
+void test_u256_overflow_pow() {
+    u256 first = {{18446744073709551615ULL, 0, 0, 0}};
+    u256 second = {{2, 0, 0, 0}};
+    u256 expected_result = {{1, 18446744073709551614ULL, 0, 0}};
+    u256_overflow_op result = u256_overflow_pow(first, second);
+
+    assert_that(u256_cmp(result.res, expected_result) == 0);
+    assert_that(result.overflow == 0);
+}
+
+void test_u256_overflow_pow_with_overflow() {
+    u256 first = {{18446744073709551615ULL, 18446744073709551615ULL, 1099511627775ULL, 0}};
+    u256 second = {{2919980651337220095ULL, 14019525496019259228ULL, 10995116277ULL, 0}};
+    u256 expected_result = {
+        {18446744073709551615ULL, 18446744073709551615ULL, 17870282221894500351ULL, 14019525494141808257ULL}};
+    u256_overflow_op result = u256_overflow_pow(first, second);
+
+    assert_that(u256_cmp(result.res, expected_result) == 0);
+    assert_that(result.overflow == 1);
+}
+
 void test_u256_bitand() {
     u256 first = {{18446744073709551615ULL, 18446744073709551615ULL, 1099511627775ULL, 1ULL}};
     u256 second = {{2919980651337220095ULL, 14019525496019259228ULL, 10995116277ULL, 0}};
@@ -136,6 +157,32 @@ void test_u256_divmod_without_rem() {
 
     assert_that(u256_cmp(result.quot, expected_quot) == 0);
     assert_that(u256_cmp(result.rem, expected_rem) == 0);
+}
+
+void test_u256_div() {
+    u256 first = {{18446744073709551615ULL, 18446744073709551615ULL, 1099511627775ULL, 0}};
+    u256 second = {{2919980651337220095ULL, 14019525496019259228ULL, 10995116277ULL, 0}};
+    u256 quot = u256_div(first, second);
+    u256 expected_quot = {{100, 0, 0, 0}};
+
+    assert_that(u256_cmp(quot, expected_quot) == 0);
+}
+
+void test_u256_mod() {
+    u256 first = {{18446744073709551615ULL, 18446744073709551615ULL, 1099511627775ULL, 0}};
+    u256 second = {{2919980651337220095ULL, 14019525496019259228ULL, 10995116277ULL, 0}};
+    u256 rem = u256_mod(first, second);
+    u256 expected_rem = {{3149840045630816355, 0, 0, 0}};
+
+    assert_that(u256_cmp(rem, expected_rem) == 0);
+}
+
+void test_u256_is_even() {
+    u256 even = {{18446744073709551614ULL, 18446744073709551615ULL, 18446744073709551615ULL, 0ULL}};
+    u256 odd = {{18446744073709551615ULL, 18446744073709551615ULL, 18446744073709551615ULL, 1ULL}};
+
+    assert_that(u256_is_even(even));
+    assert_that(!u256_is_even(odd));
 }
 
 void test_u256_from_string() {
@@ -214,6 +261,8 @@ int main() {
     test(test_u256_overflow_sub_with_overflow);
     test(test_u256_overflow_mul);
     test(test_u256_overflow_mul_with_overflow);
+    test(test_u256_overflow_pow);
+    test(test_u256_overflow_pow_with_overflow);
     test(test_u256_bitand);
     test(test_u256_bitor);
     test(test_u256_bitxor);
@@ -222,6 +271,9 @@ int main() {
     test(test_u256_shr);
     test(test_u256_divmod_with_rem);
     test(test_u256_divmod_without_rem);
+    test(test_u256_div);
+    test(test_u256_mod);
+    test(test_u256_is_even);
     test(test_u256_from_string);
     test(test_u256_to_string);
     test(test_u256_from_u64);
