@@ -133,6 +133,8 @@ char *biguint_to_dec_string(BigUint a) {
         dst[k] = result[i + k];
         k++;
     }
+    dst[k - 1] = '\0';
+
     biguint_free_limbs(&ten);
     biguint_free_limbs(&dividend);
     biguint_free_limbs(&quot);
@@ -238,19 +240,21 @@ int biguint_overflow_pow(BigUint *a, BigUint exponent) {
 
     int overflow = 0;
     BigUint one = biguint_new_heap(a->size);
+    BigUint exp = biguint_new_heap(exponent.size);
     BigUint y = biguint_new_heap(a->size);
     biguint_one(&y);
     biguint_one(&one);
+    biguint_cpy(&exp, exponent);
 
-    while (biguint_cmp(exponent, one) > 0) {
-        if (biguint_is_even(exponent)) {
+    while (biguint_cmp(exp, one) > 0) {
+        if (biguint_is_even(exp)) {
             overflow |= biguint_overflow_mul(a, *a);
-            biguint_shr(&exponent, 1);
+            biguint_shr(&exp, 1);
         } else {
             overflow |= biguint_overflow_mul(&y, *a);
             overflow |= biguint_overflow_mul(a, *a);
-            biguint_sub(&exponent, one);
-            biguint_shr(&exponent, 1);
+            biguint_sub(&exp, one);
+            biguint_shr(&exp, 1);
         }
     }
 

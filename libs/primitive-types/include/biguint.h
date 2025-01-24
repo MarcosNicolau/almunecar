@@ -3,6 +3,7 @@
 
 #include "u64.h"
 #include <stdlib.h>
+#include <utils/macros.h>
 
 typedef struct {
     uint64_t *limbs; // Pointer to an array of 64-bit integers representing the large integer
@@ -39,9 +40,9 @@ typedef struct {
  * ```
  */
 #define biguint_free(...)                                                                                              \
-    BigUint *args[] = {__VA_ARGS__};                                                                                   \
-    for (size_t i = 0; i < sizeof(args) / sizeof(args[0]); i++)                                                        \
-        biguint_free_limbs(args[i]);
+    BigUint *ANONYMOUS_VARIABLE(args)[] = {__VA_ARGS__};                                                               \
+    for (size_t i = 0; i < sizeof(ANONYMOUS_VARIABLE(args)) / sizeof(ANONYMOUS_VARIABLE(args)[0]); i++)                \
+        biguint_free_limbs(ANONYMOUS_VARIABLE(args)[i]);
 
 /**
  * Creates a `BigUint` on the stack with a specified number of limbs, all initialized to 0.
