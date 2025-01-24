@@ -2,15 +2,19 @@
 
 void biguint_gcd(BigUint a, BigUint b, BigUint *out) {
     BigUint rem = biguint_new_heap(a.size);
+    BigUint x = biguint_new_heap(a.size);
+    BigUint y = biguint_new_heap(b.size);
+    biguint_cpy(&x, a);
+    biguint_cpy(&y, b);
 
-    while (!biguint_is_zero(b)) {
-        biguint_mod(a, b, &rem);
-        biguint_cpy(&a, b);
-        biguint_cpy(&b, rem);
+    while (!biguint_is_zero(y)) {
+        biguint_mod(x, y, &rem);
+        biguint_cpy(&x, y);
+        biguint_cpy(&y, rem);
     }
 
-    biguint_free_limbs(&rem);
-    biguint_cpy(out, b);
+    biguint_cpy(out, x);
+    biguint_free(&rem, &x, &y);
 }
 
 void biguint_lcm(BigUint a, BigUint b, BigUint *out) {
@@ -18,27 +22,28 @@ void biguint_lcm(BigUint a, BigUint b, BigUint *out) {
         biguint_zero(out);
         return;
     }
+    BigUint x = biguint_new_heap(a.size);
+    BigUint y = biguint_new_heap(b.size);
+    biguint_cpy(&x, a);
+    biguint_cpy(&y, b);
 
     BigUint gcd = biguint_new_heap(out->size);
-    biguint_gcd(a, b, &gcd);
+    biguint_gcd(x, y, &gcd);
+    biguint_mul(&x, y);
+    biguint_div(x, gcd, out);
 
-    biguint_mul(&a, b);
-    BigUint rem = biguint_new_heap(out->size);
-    biguint_divmod(a, gcd, out, &rem);
-
-    biguint_free_limbs(&rem);
-    biguint_free_limbs(&gcd);
+    biguint_free(&gcd, &x, &y);
 }
 
 void biguint_extended_euclidean_algorithm(BigUint a, BigUint b, ExtendedEuclideanAlgorithm *out) {
-    BigUint rp; // r_0
+    BigUint rp = biguint_new_heap(a.size); // r_0
     biguint_cpy(&rp, a);
-    BigUint ri = b; // r_1
+    BigUint ri = biguint_new_heap(a.size); // r_1
     biguint_cpy(&ri, b);
     BigUint sp = biguint_new_heap(a.size); // s_0
     biguint_one(&sp);
     BigUint si = biguint_new_heap(a.size); // s_1
-    biguint_zero(&sp);
+    biguint_zero(&si);
     BigUint tp = biguint_new_heap(a.size); // t_0
     biguint_zero(&tp);
     BigUint ti = biguint_new_heap(a.size); // t_1
@@ -67,8 +72,8 @@ void biguint_extended_euclidean_algorithm(BigUint a, BigUint b, ExtendedEuclidea
         // s = s_{i-1} - q_i * s_i
         biguint_cpy(&qs, si);
         biguint_mul(&qs, quot);
-        biguint_cpy(&s, rp);
-        biguint_sub(&s, qr);
+        biguint_cpy(&s, sp);
+        biguint_sub(&s, qs);
 
         // t = t_{i-1} - q_i * t_i
         biguint_cpy(&qt, ti);
@@ -88,5 +93,5 @@ void biguint_extended_euclidean_algorithm(BigUint a, BigUint b, ExtendedEuclidea
     biguint_cpy(&out->rk, rp);
     biguint_cpy(&out->sk, sp);
     biguint_cpy(&out->tk, tp);
-    biguint_free(&sp, &si, &tp, &ti, &quot, &r, &qr, &s, &qs, &t, &qt);
-};
+    biguint_free(&rp, &ri, &sp, &si, &tp, &ti, &quot, &r, &qr, &s, &qs, &t, &qt);
+}

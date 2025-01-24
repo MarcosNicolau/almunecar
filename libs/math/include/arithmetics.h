@@ -20,6 +20,16 @@ typedef struct {
     BigUint tk;
 } ExtendedEuclideanAlgorithm;
 
+#define extended_euclidean_algorithm_new_heap(SIZE)                                                                    \
+    (ExtendedEuclideanAlgorithm) {                                                                                     \
+        .rk = biguint_new_heap(SIZE), .sk = biguint_new_heap(SIZE), .tk = biguint_new_heap(SIZE)                       \
+    }
+
+#define extended_euclidean_algorithm_new(SIZE)                                                                         \
+    (ExtendedEuclideanAlgorithm) { .rk = biguint_new(SIZE), .sk = biguint_new(SIZE), .tk = biguint_new(SIZE) }
+
+#define extended_euclidean_algorithm_free(str) biguint_free(&str.rk, &str.sk, &str.tk)
+
 void biguint_extended_euclidean_algorithm(BigUint a, BigUint b, ExtendedEuclideanAlgorithm *out);
 
 #endif

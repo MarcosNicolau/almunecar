@@ -32,16 +32,16 @@ RSAKeyPair rsa_gen_key_pair(unsigned int bit_size) {
     BigUint e = biguint_new_heap(key_size);
     BigUint d = biguint_new_heap(key_size);
     biguint_from_u64(e_const, &e);
-    ExtendedEuclideanAlgorithm alg = {
-        .rk = biguint_new_heap(key_size), .sk = biguint_new_heap(key_size), .tk = biguint_new_heap(key_size)};
+    ExtendedEuclideanAlgorithm alg = extended_euclidean_algorithm_new_heap(key_size);
     biguint_extended_euclidean_algorithm(e, lambda_n, &alg);
     biguint_cpy(&d, alg.sk);
+    extended_euclidean_algorithm_free(alg);
 
     RSAPublicKey pub_key = {.n = n, .e = e};
     RSAPrivateKey priv_key = {.n = n, .d = d};
     RSAKeyPair key_pair = {.pub = pub_key, .priv = priv_key, .bit_size = bit_size};
 
-    biguint_free(&p, &q, &one, &alg.rk, &alg.sk, &alg.tk);
+    biguint_free(&p, &q, &one);
 
     return key_pair;
 }
