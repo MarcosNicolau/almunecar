@@ -11,5 +11,6 @@
  */
 uint64_t u64_random();
 void biguint_random(BigUint *a);
+void biguint_random_with_max_bits(BigUint *a, int max_bits);
 
 #endif
