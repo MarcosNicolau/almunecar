@@ -190,7 +190,7 @@ int biguint_overflow_add(BigUint *a, BigUint b) {
 };
 
 void biguint_add_mod(BigUint *a, BigUint b, BigUint m) {
-    biguint_add(&a, b);
+    biguint_add(a, b);
     biguint_mod(*a, m, a);
 }
 
@@ -206,7 +206,7 @@ int biguint_overflow_sub(BigUint *a, BigUint b) {
 };
 
 void biguint_sub_mod(BigUint *a, BigUint b, BigUint m) {
-    biguint_sub(&a, b);
+    biguint_sub(a, b);
     biguint_mod(*a, m, a);
 }
 
@@ -245,14 +245,16 @@ void biguint_mul_mod(BigUint *a, BigUint b, BigUint m) {
     // allocate twice the memory to prevent overflow
     BigUint x = biguint_new_heap(a->size * 2);
     BigUint y = biguint_new_heap(b.size * 2);
+    BigUint mod = biguint_new_heap(b.size * 2);
     biguint_cpy(&x, *a);
     biguint_cpy(&y, b);
+    biguint_cpy(&mod, m);
 
     biguint_mul(&x, y);
-    biguint_mod(x, m, &x);
+    biguint_mod(x, mod, &x);
     biguint_cpy(a, x);
 
-    biguint_free(&x, &y);
+    biguint_free(&x, &y, &mod);
 }
 
 // https://en.wikipedia.org/wiki/Exponentiation_by_squaring
