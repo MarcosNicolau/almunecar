@@ -260,8 +260,55 @@ int biguint_overflow_pow(BigUint *a, BigUint exponent) {
 
     overflow |= biguint_overflow_mul(a, y);
 
-    biguint_free(&one, &y);
+    biguint_free(&one, &exp, &y);
     return overflow;
+}
+
+// performs a pow operation keeping the result in bounds over a mod m, using the following identity:
+// (a ⋅ b) mod m = [(a mod m) ⋅ (b mod m)] mod m
+// https://en.wikipedia.org/wiki/Modular_exponentiation
+void biguint_pow_mod(BigUint *a, BigUint m, BigUint exponent) {
+    if (biguint_is_zero(exponent)) {
+        biguint_one(a);
+        return;
+    }
+
+    // Since this is the power over a boundary, we want to prevent overflows during multiplication
+    // so we have to allocate twice the memory
+    // in the end we wrap it around the m and it should fit back into the initial size
+    BigUint base = biguint_new_heap(a->size * 2);
+    BigUint mod = biguint_new_heap(a->size * 2);
+    BigUint one = biguint_new_heap(a->size * 2);
+    BigUint exp = biguint_new_heap(exponent.size * 2);
+    BigUint y = biguint_new_heap(a->size * 2);
+    biguint_one(&y);
+    biguint_cpy(&base, *a);
+    biguint_cpy(&mod, m);
+    biguint_one(&one);
+    biguint_cpy(&exp, exponent);
+
+    biguint_mod(base, mod, &base);
+    while (biguint_cmp(exp, one) > 0) {
+        if (biguint_is_even(exp)) {
+            biguint_mul(&base, base);
+            biguint_mod(base, mod, &base);
+            biguint_shr(&exp, 1);
+        } else {
+            biguint_mul(&y, base);
+            biguint_mod(y, mod, &y);
+            biguint_mul(&base, base);
+            biguint_mod(base, mod, &base);
+            biguint_sub(&exp, one);
+            biguint_shr(&exp, 1);
+        }
+    }
+
+    biguint_mul(&base, y);
+    biguint_mod(base, mod, &base);
+
+    biguint_cpy(a, base);
+
+    biguint_free(&base, &mod, &one, &exp, &y);
 }
 
 void biguint_add(BigUint *a, BigUint b) { biguint_overflow_add(a, b); }

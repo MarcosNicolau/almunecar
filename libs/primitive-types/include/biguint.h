@@ -412,6 +412,23 @@ int biguint_overflow_pow(BigUint *a, BigUint exponent);
 void biguint_pow(BigUint *a, BigUint exponent);
 
 /**
+ * Computes the power of a BigUint keeping the result in bounds over a mod m
+ *
+ * @param a Pointer to the base (BigUint). The result is stored in this variable.
+ * @param m The modulus (BigUint). The result is computed modulo this value.
+ * @param exponent The exponent (BigUint). The base `a` is raised to this power.
+ *
+ * @example
+ * ```
+ * BigUint base = biguint_new(2);
+ * BigUint modulus = biguint_new(1000);
+ * BigUint exponent = biguint_new(10);
+ * biguint_pow_mod(&base, modulus, exponent);  // `base` is now (2^10) % 1000 = 24
+ * ```
+ */
+void biguint_pow_mod(BigUint *a, BigUint m, BigUint exponent);
+
+/**
  * Divides one BigUint by another, storing the quotient and remainder.
  *
  * @param a The dividend (BigUint).
