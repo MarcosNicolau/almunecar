@@ -349,6 +349,23 @@ void biguint_mul(BigUint *a, BigUint b);
 int biguint_overflow_add(BigUint *a, BigUint b);
 
 /**
+ * Computes the addition of a + b (mod m).
+ *
+ * @param a Pointer to the first BigUint (result stored here).
+ * @param b The second BigUint to add.
+ * @param m The third BigUint defining the modulus.
+ *
+ * @example
+ * ```
+ * BigUint a = biguint_new(1);
+ * BigUint b = biguint_new(1);
+ * BigUint m = biguint_new(1);
+ * biguint_add_mod(&a, b, m);
+ * ```
+ */
+void biguint_add_mod(BigUint *a, BigUint b, BigUint m);
+
+/**
  * Checks for overflow when subtracting two BigUint values.
  *
  * @param a Pointer to the first BigUint (result stored here).
@@ -365,6 +382,23 @@ int biguint_overflow_add(BigUint *a, BigUint b);
 int biguint_overflow_sub(BigUint *a, BigUint b);
 
 /**
+ * Computes the substraction of a - b (mod m).
+ *
+ * @param a Pointer to the first BigUint (result stored here).
+ * @param b The second BigUint to substract.
+ * @param m The third BigUint defining the modulus.
+ *
+ * @example
+ * ```
+ * BigUint a = biguint_new(1);
+ * BigUint b = biguint_new(1);
+ * BigUint m = biguint_new(1);
+ * biguint_sub_mod(&a, b, m);
+ * ```
+ */
+void biguint_sub_mod(BigUint *a, BigUint b, BigUint m);
+
+/**
  * Checks for overflow when multiplying two BigUint values.
  *
  * @param a Pointer to the first BigUint (result stored here).
@@ -379,6 +413,23 @@ int biguint_overflow_sub(BigUint *a, BigUint b);
  * ```
  */
 int biguint_overflow_mul(BigUint *a, BigUint b);
+
+/**
+ * Computes the multiplication of a * b (mod m).
+ *
+ * @param a Pointer to the first BigUint (result stored here).
+ * @param b The second BigUint to multiply.
+ * @param m The third BigUint defining the modulus.
+ *
+ * @example
+ * ```
+ * BigUint a = biguint_new(1);
+ * BigUint b = biguint_new(1);
+ * BigUint m = biguint_new(1);
+ * biguint_mul_mod(&a, b, m);
+ * ```
+ */
+void biguint_mul_mod(BigUint *a, BigUint b, BigUint m);
 
 /**
  * Computes the power of a BigUint to an exponent and checks for overflow.

@@ -189,6 +189,11 @@ int biguint_overflow_add(BigUint *a, BigUint b) {
     return carry > 0;
 };
 
+void biguint_add_mod(BigUint *a, BigUint b, BigUint m) {
+    biguint_add(&a, b);
+    biguint_mod(*a, m, a);
+}
+
 int biguint_overflow_sub(BigUint *a, BigUint b) {
     uint64_t carry = 0;
     for (int i = 0; i < a->size; i++) {
@@ -199,6 +204,11 @@ int biguint_overflow_sub(BigUint *a, BigUint b) {
     }
     return carry > 0;
 };
+
+void biguint_sub_mod(BigUint *a, BigUint b, BigUint m) {
+    biguint_sub(&a, b);
+    biguint_mod(*a, m, a);
+}
 
 int biguint_overflow_mul(BigUint *a, BigUint b) {
     uint64_t result[a->size * 2];
@@ -230,6 +240,20 @@ int biguint_overflow_mul(BigUint *a, BigUint b) {
 
     return overflow;
 };
+
+void biguint_mul_mod(BigUint *a, BigUint b, BigUint m) {
+    // allocate twice the memory to prevent overflow
+    BigUint x = biguint_new_heap(a->size * 2);
+    BigUint y = biguint_new_heap(b.size * 2);
+    biguint_cpy(&x, *a);
+    biguint_cpy(&y, b);
+
+    biguint_mul(&x, y);
+    biguint_mod(x, m, &x);
+    biguint_cpy(a, x);
+
+    biguint_free(&x, &y);
+}
 
 // https://en.wikipedia.org/wiki/Exponentiation_by_squaring
 int biguint_overflow_pow(BigUint *a, BigUint exponent) {
@@ -276,6 +300,9 @@ void biguint_pow_mod(BigUint *a, BigUint m, BigUint exponent) {
     // Since this is the power over a boundary, we want to prevent overflows during multiplication
     // so we have to allocate twice the memory
     // in the end we wrap it around the m and it should fit back into the initial size
+    //
+    // note that we could use mul_mod but this way we avoid
+    // allocating and freeing memory on the heap every iteration as mul_mod does it for use
     BigUint base = biguint_new_heap(a->size * 2);
     BigUint mod = biguint_new_heap(a->size * 2);
     BigUint one = biguint_new_heap(a->size * 2);
