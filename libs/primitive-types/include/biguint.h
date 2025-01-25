@@ -477,7 +477,7 @@ void biguint_pow(BigUint *a, BigUint exponent);
  * biguint_pow_mod(&base, modulus, exponent);  // `base` is now (2^10) % 1000 = 24
  * ```
  */
-void biguint_pow_mod(BigUint *a, BigUint m, BigUint exponent);
+void biguint_pow_mod(BigUint *a, BigUint exponent, BigUint m);
 
 /**
  * Divides one BigUint by another, storing the quotient and remainder.

@@ -84,7 +84,7 @@ int biguint_is_prime_solovay_strassen(BigUint p) {
         // since we check that gcd(a, p) == 1
         // j = {-1,1} so we don't have to check if it == 0
         int j = jacobi(a, p);
-        biguint_pow_mod(&a, p, exponent);
+        biguint_pow_mod(&a, exponent, p);
         biguint_mod(a, p, &rem);
 
         // (p - 1) mod p = -1 mod p

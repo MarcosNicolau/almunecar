@@ -128,7 +128,7 @@ void test_biguint_overflow_pow_mod() {
     BigUint mod = biguint_new_with_limbs(4, {2919980651337220095ULL, 14019525496019259228ULL, 10995116277ULL, 0});
     BigUint expected_result =
         biguint_new_with_limbs(4, {16397732815629627738ULL, 9206660263325832418ULL, 5229948569ULL, 0});
-    biguint_pow_mod(&first, mod, exp);
+    biguint_pow_mod(&first, exp, mod);
 
     assert_that(biguint_cmp(first, expected_result) == 0);
 }

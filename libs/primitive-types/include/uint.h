@@ -253,9 +253,9 @@
  * Returns the result in mod m. \
  */
 #define DEFINE_UINT_OVERFLOW_POW_MOD(NAME, WORDS)                                                                      \
-    NAME NAME##_pow_mod(NAME a, NAME m, NAME exponent) {                                                               \
+    NAME NAME##_pow_mod(NAME a, NAME exponent, NAME m) {                                                               \
         BigUint result = uint_to_biguint(a);                                                                           \
-        biguint_pow_mod(&result, uint_to_biguint(m), uint_to_biguint(exponent));                                       \
+        biguint_pow_mod(&result, uint_to_biguint(exponent), uint_to_biguint(m));                                       \
         return NAME##_from_biguint(result);                                                                            \
     }
 

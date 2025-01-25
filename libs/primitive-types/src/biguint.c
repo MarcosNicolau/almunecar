@@ -293,7 +293,7 @@ int biguint_overflow_pow(BigUint *a, BigUint exponent) {
 // performs a pow operation keeping the result in bounds over a mod m, using the following identity:
 // (a ⋅ b) mod m = [(a mod m) ⋅ (b mod m)] mod m
 // https://en.wikipedia.org/wiki/Modular_exponentiation
-void biguint_pow_mod(BigUint *a, BigUint m, BigUint exponent) {
+void biguint_pow_mod(BigUint *a, BigUint exponent, BigUint m) {
     if (biguint_is_zero(exponent)) {
         biguint_one(a);
         return;

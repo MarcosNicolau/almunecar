@@ -119,7 +119,7 @@ void test_u256_overflow_pow_mod() {
     u256 exp = {{2919980651337220095ULL, 14019525496019259228ULL, 10995116277ULL, 0}};
     u256 mod = {{2919980651337220095ULL, 14019525496019259228ULL, 10995116277ULL, 0}};
     u256 expected_result = {{16397732815629627738ULL, 9206660263325832418ULL, 5229948569ULL, 0}};
-    u256 result = u256_pow_mod(first, mod, exp);
+    u256 result = u256_pow_mod(first, exp, mod);
 
     assert_that(u256_cmp(result, expected_result) == 0);
 }
