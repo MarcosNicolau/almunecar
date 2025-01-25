@@ -17,17 +17,20 @@ int biguint_is_prime(BigUint a) {
     BigUint rem = biguint_new_heap(a.size);
 
     for (int i = 0; i < PRIMES_LENGTH; i++) {
-        // if a < p and we are at this point, a is 100% prime
-        if (biguint_cmp(a, p) < 0) {
-            biguint_free(&p, &rem) return 1;
+        biguint_from_u64(PRIMES[i], &p);
+
+        // if a <= p and we are at this point, a is 100% prime
+        if (biguint_cmp(a, p) <= 0) {
+            biguint_free(&p, &rem);
+            return 1;
         }
 
-        biguint_from_u64(PRIMES[i], &p);
         biguint_mod(a, p, &rem);
 
         // found a factor
         if (biguint_is_zero(rem)) {
-            biguint_free(&p, &rem) return 0;
+            biguint_free(&p, &rem);
+            return 0;
         }
     }
 
@@ -49,21 +52,24 @@ int biguint_is_prime(BigUint a) {
 //    - https://en.wikipedia.org/wiki/Solovay%E2%80%93Strassen_primality_test
 //    - https://web.archive.org/web/20230127011251/http://people.csail.mit.edu/rivest/Rsapaper.pdf (page 9)
 int biguint_is_prime_solovay_strassen(BigUint p) {
-    BigUint a = biguint_new_heap(p.size);
-    BigUint rem = biguint_new_heap(p.size);
+    BigUint one = biguint_new_heap(p.size);
+    biguint_one(&one);
+    BigUint two = biguint_new_heap(p.size);
+    biguint_from_u64(2, &two);
+
     BigUint exponent = biguint_new_heap(p.size);
-    BigUint num = biguint_new_heap(p.size);
     biguint_cpy(&exponent, p);
-    biguint_one(&num);
-    biguint_sub(&exponent, num);
-    biguint_from_u64(2, &num);
-    biguint_div(exponent, num, &exponent);
-    int p_bits = biguint_bits(p);
+    biguint_sub(&exponent, one);
+    biguint_div(exponent, two, &exponent);
 
     BigUint p_minus_one = biguint_new_heap(p.size);
-    biguint_from_u64(1, &num);
     biguint_cpy(&p_minus_one, p);
-    biguint_sub(&p_minus_one, num);
+    biguint_sub(&p_minus_one, one);
+
+    BigUint a = biguint_new_heap(p.size);
+    BigUint rem = biguint_new_heap(p.size);
+    int p_bits = biguint_bits(p);
+    int is_prime = 1;
 
     for (int i = 0; i < SOLOVAY_STRASSEN_TEST_SAMPLES; i++) {
         biguint_random_with_max_bits(&a, p_bits);
@@ -86,16 +92,17 @@ int biguint_is_prime_solovay_strassen(BigUint p) {
             continue;
         }
 
-        if (biguint_cmp(rem, num) == 0 && j == 1) {
+        if (biguint_cmp(rem, one) == 0 && j == 1) {
             continue;
         }
 
-        return 0;
+        is_prime = 0;
+        break;
     }
 
-    biguint_free(&a, &rem, &exponent, &num, &p_minus_one);
+    biguint_free(&one, &two, &exponent, &p_minus_one, &a, &rem);
 
-    return 1;
+    return is_prime;
 }
 
 /**
