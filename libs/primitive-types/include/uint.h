@@ -212,6 +212,18 @@
     }
 
 /** \
+ * Calculates the power of two unsigned integers over a mod m. \
+ *                                                                                                       \
+ * Returns a structure containing the result and an overflow flag. \
+ */
+#define DEFINE_UINT_OVERFLOW_POW_MOD(NAME, WORDS)                                                                      \
+    NAME NAME##_pow_mod(NAME a, NAME m, NAME exponent) {                                                               \
+        BigUint result = uint_to_biguint(a);                                                                           \
+        biguint_pow_mod(&result, uint_to_biguint(m), uint_to_biguint(exponent));                                       \
+        return NAME##_from_biguint(result);                                                                            \
+    }
+
+/** \
  * Calculates the number of significant bits in the unsigned integer. \
  *                                                                                                       \
  * Returns the number of bits required to represent `a`. \
@@ -437,6 +449,7 @@
     DEFINE_UINT_MOD(NAME, WORDS)                                                                                       \
     DEFINE_UINT_IS_EVEN(NAME, WORDS)                                                                                   \
     DEFINE_UINT_OVERFLOW_POW(NAME, WORDS)                                                                              \
+    DEFINE_UINT_OVERFLOW_POW_MOD(NAME, WORDS)                                                                          \
     DEFINE_UINT_FROM_DEC_STRING(NAME, WORDS)                                                                           \
     DEFINE_UINT_TO_STRING(NAME, WORDS)                                                                                 \
     DEFINE_UINT_PRINT(NAME, WORDS)                                                                                     \
