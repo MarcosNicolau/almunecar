@@ -22,6 +22,16 @@ void test_u256_overflow_add_with_overflow() {
     assert_that(result.overflow == 1);
 }
 
+void test_u256_add_mod() {
+    u256 first = {{UINT64_MAX, UINT64_MAX, UINT64_MAX, UINT64_MAX}};
+    u256 second = {{UINT64_MAX, UINT64_MAX, UINT64_MAX, UINT64_MAX}};
+    u256 mod = {{UINT64_MAX, 0, 0, 0}};
+    u256 result = u256_add_mod(first, second, mod);
+    u256 expected_result = {{UINT64_MAX - 1, 0, 0, 0}};
+
+    assert_that(u256_cmp(result, expected_result) == 0);
+}
+
 void test_u256_overflow_sub() {
     u256 first = {{18446744073709551615ULL, 18446744073709551615ULL, 1099511627775ULL, 0}};
     u256 second = {{2919980651337220095ULL, 14019525496019259228ULL, 10995116277ULL, 0}};
@@ -40,6 +50,16 @@ void test_u256_overflow_sub_with_overflow() {
 
     assert_that(u256_cmp(result.res, expected_result) == 0);
     assert_that(result.overflow == 1);
+}
+
+void test_u256_sub_mod() {
+    u256 first = {{0, 0, 0, 0}};
+    u256 second = {{1, 1, 1, 1}};
+    u256 mod = {{UINT64_MAX, UINT64_MAX, 0, 0}};
+    u256 result = u256_sub_mod(first, second, mod);
+    u256 expected_result = {{UINT64_MAX - 1, UINT64_MAX - 2, 0, 0}};
+
+    assert_that(u256_cmp(result, expected_result) == 0);
 }
 
 void test_u256_overflow_mul() {
@@ -61,6 +81,16 @@ void test_u256_overflow_mul_with_overflow() {
 
     assert_that(u256_cmp(result.res, expected_result) == 0);
     assert_that(result.overflow == 1);
+}
+
+void test_u256_mul_mod() {
+    u256 first = {{18446744073709551615ULL, 18446744073709551615ULL, 1099511627775ULL, 0}};
+    u256 second = {{2919980651337220095ULL, 14019525496019259228ULL, 10995116277ULL, 0}};
+    u256 mod = {{1, 0, 0, 0}};
+    u256 result = u256_mul_mod(first, second, mod);
+    u256 expected_result = {{0, 0, 0, 0}};
+
+    assert_that(u256_cmp(result, expected_result) == 0);
 }
 
 void test_u256_overflow_pow() {
@@ -90,7 +120,6 @@ void test_u256_overflow_pow_mod() {
     u256 mod = {{2919980651337220095ULL, 14019525496019259228ULL, 10995116277ULL, 0}};
     u256 expected_result = {{16397732815629627738ULL, 9206660263325832418ULL, 5229948569ULL, 0}};
     u256 result = u256_pow_mod(first, mod, exp);
-    u256_raw_println(result);
 
     assert_that(u256_cmp(result, expected_result) == 0);
 }
@@ -268,10 +297,13 @@ int main() {
     BEGIN_TEST();
     test(test_u256_overflow_add);
     test(test_u256_overflow_add_with_overflow);
+    test(test_u256_add_mod);
     test(test_u256_overflow_sub);
     test(test_u256_overflow_sub_with_overflow);
+    test(test_u256_sub_mod);
     test(test_u256_overflow_mul);
     test(test_u256_overflow_mul_with_overflow);
+    test(test_u256_mul_mod);
     test(test_u256_overflow_pow);
     test(test_u256_overflow_pow_with_overflow);
     test(test_u256_overflow_pow_mod);
