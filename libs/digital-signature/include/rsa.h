@@ -12,7 +12,6 @@ typedef struct {
 
 typedef struct {
     BigUint d;
-    BigUint n;
 } RSAPrivateKey;
 
 typedef struct {
@@ -21,8 +20,14 @@ typedef struct {
     unsigned int bit_size;
 } RSAKeyPair;
 
-RSAKeyPair rsa_gen_key_pair(unsigned int bit_size);
-void rsa_key_pair_destroy(RSAKeyPair *key_pair);
+#define rsa_key_pair_new(BIT_SIZE)                                                                                     \
+    (RSAKeyPair) {                                                                                                     \
+        .bit_size = BIT_SIZE, .pub = {.e = biguint_new(BIT_SIZE / 64), .n = biguint_new(BIT_SIZE / 64)}, .priv = {     \
+            .d = biguint_new(BIT_SIZE / 64)                                                                            \
+        }                                                                                                              \
+    }
+
+void rsa_gen_key_pair(RSAKeyPair *key_pair);
 void rsa_encrypt_msg_PKCS1v15(uint8_t *msg, RSAPrivateKey priv, uint8_t *buffer);
 void rsa_decrypt_msg_PKCS1v15(RSAPublicKey *pub, uint8_t *msg, uint8_t *buffer);
 void rsa_sign_PKCS1v15(RSAPrivateKey *priv, void *msg, uint8_t *buffer);

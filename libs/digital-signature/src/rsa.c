@@ -2,50 +2,76 @@
 
 #define e_const 65537
 
-RSAKeyPair rsa_gen_key_pair(unsigned int bit_size) {
-    int key_size = bit_size / 64;
+/**
+ * Rsa builds upon the fact that it is easy to find three larger integers e,d,n such that for any another integer
+ * m 0 <= m < n:
+ *                                                  (m^e)^d = m (mod n)
+ *
+ * However, when given e and n, it is not feasible to derive d.
+ *
+ * e and n form the Public key and d defines the Private key.
+ * m is defined as the message.
+ *
+ * From this principle, rsa protocol defines the following operations:
+ * 1. Key generation
+ * 2. Encryption/Decryption of messages
+ * 3. Signing/Verifying messages recipients
+ */
 
-    BigUint p = biguint_new_heap(key_size / 2);
-    BigUint q = biguint_new_heap(key_size / 2);
-    BigUint n = biguint_new_heap(key_size);
+// Generating a key pair consists of:
+// 1. generating two random prime number p,q
+// 2. computing n as n = p*q
+// 3. computing Carmichael's totient of n (lambda_n)
+// 4. picking an e such that 1 < e < lambda_n and gcd(e, lambda_n) = 1
+// 5. finding d as the multiplicative inverse of e
+// 6. releasing the public key as n,e and the private key as n,d
+void rsa_gen_key_pair(RSAKeyPair *key_pair) {
+    int key_size_in_bytes = key_pair->bit_size / 64;
+
+    // prime numbers have to be half the size of the desired key to prevent multiplication overflows
+    BigUint p = biguint_new_heap(key_size_in_bytes / 2);
+    BigUint q = biguint_new_heap(key_size_in_bytes / 2);
     biguint_random_prime(&p);
     biguint_random_prime(&q);
+
+    BigUint n = biguint_new_heap(key_size_in_bytes);
     biguint_cpy(&n, p);
     biguint_mul(&n, q);
 
-    // calculating Carmichael's totient function via lcm(p-1, q-1)
+    // Carmichael's totient (lambda) of n outputs the smallest integer m, such that for every integer coprime to n, it
+    // holds that:
+    //                                          (a^m = 1 (mod n))
+    // because n = p*q => lambda(n) = lcm(lambda(p) * lambda(q)), since p,q are prime then lambda(p) = p - 1 and
+    // lambda(q) = q - 1 hance lambda(n) = lcm(p - 1, q - 1)
+    //
     // https://en.wikipedia.org/wiki/Carmichael_function
-    BigUint one = biguint_new_heap(key_size);
+    BigUint one = biguint_new_heap(key_size_in_bytes);
     biguint_one(&one);
     biguint_sub(&p, one);
     biguint_sub(&q, one);
-    BigUint lambda_n;
+
+    BigUint lambda_n = biguint_new_heap(key_size_in_bytes);
     biguint_lcm(p, q, &lambda_n);
 
-    // d = e^(-1) (mod lambda_n) (i.e `e` is the multiplicative inverse of `d` in Z_{lambda_n})
-
-    // since lambda_n and e are coprime (1) we can calculate the gcd via the
-    // extended euclidean which fullfills the Bezout identity (ax + by = gcd(a,b))
-    // Because of (1) x (our d) is the multiplicative inverse of a mod b
-    // and y is the multiplicative inverse of b mod
-    // finally d = x = s_k computed from the euclidean algorithm
-    BigUint e = biguint_new_heap(key_size);
-    BigUint d = biguint_new_heap(key_size);
+    // Now we need to compute the private exponent d as
+    // d = e^(-1) (mod lambda_n)
+    // (i.e e is the multiplicative inverse of `d` in Z_{lambda_n} so d*e = 1 (mod lambda_n))
+    //
+    // Bezout identity states that given two integers a,b that are coprime then there exist two integers x, y such that:
+    //                             ax + by = gcd(a,b) or ax = gcd(a, b) (mod b)
+    //
+    // Because lambda_n and e are comprime => gcd(e, lambda_n) = 1, so ax = 1 (mod n)
+    // so if we can compute x we get d.
+    //
+    // Using the extended euclidean algorithm we can compute both x,y obtaining d
+    BigUint e = biguint_new_heap(key_size_in_bytes);
+    BigUint d = biguint_new_heap(key_size_in_bytes);
     biguint_from_u64(e_const, &e);
-    ExtendedEuclideanAlgorithm alg = extended_euclidean_algorithm_new_heap(key_size);
-    biguint_extended_euclidean_algorithm(e, lambda_n, &alg);
-    biguint_cpy(&d, alg.sk);
-    extended_euclidean_algorithm_free(alg);
+    biguint_inverse_mod(e, lambda_n, &d);
 
-    RSAPublicKey pub_key = {.n = n, .e = e};
-    RSAPrivateKey priv_key = {.n = n, .d = d};
-    RSAKeyPair key_pair = {.pub = pub_key, .priv = priv_key, .bit_size = bit_size};
+    biguint_cpy(&key_pair->pub.n, n);
+    biguint_cpy(&key_pair->pub.e, e);
+    biguint_cpy(&key_pair->priv.d, d);
 
-    biguint_free(&p, &q, &one);
-
-    return key_pair;
-}
-
-void rsa_key_pair_destroy(RSAKeyPair *key_pair) {
-    biguint_free(&key_pair->priv.d, &key_pair->priv.n, &key_pair->pub.e, &key_pair->pub.n);
+    biguint_free(&p, &q, &n, &one, &lambda_n, &e, &d);
 }
