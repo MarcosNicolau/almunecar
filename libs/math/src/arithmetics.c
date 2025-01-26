@@ -35,6 +35,20 @@ void biguint_lcm(BigUint a, BigUint b, BigUint *out) {
     biguint_free(&gcd, &x, &y);
 }
 
+// verifies if the bezout identity in its modular form (at = gcd(a,b) (mod b)) holds
+// given: a, b, t, gcd(a,b)
+// https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm#Modular_integers
+int biguint_bezout_identity_mod_holds(BigUint a, BigUint t, BigUint m, BigUint gcd) {
+    BigUint at = biguint_new_heap(a.size);
+    biguint_cpy(&at, a);
+    biguint_mul(&at, t);
+    biguint_mod(at, m, &at);
+    if (biguint_cmp(at, gcd) != 0) {
+        return 0;
+    }
+    return 1;
+};
+
 void biguint_extended_euclidean_algorithm(BigUint a, BigUint b, ExtendedEuclideanAlgorithm *out) {
     BigUint rp = biguint_new_heap(a.size); // r_0
     biguint_cpy(&rp, a);
@@ -60,10 +74,6 @@ void biguint_extended_euclidean_algorithm(BigUint a, BigUint b, ExtendedEuclidea
     BigUint t = biguint_new_heap(a.size);
     BigUint qt = biguint_new_heap(a.size);
 
-    int overflow;
-    out->sk_sign = 1;
-    out->tk_sign = 1;
-
     while (!biguint_is_zero(ri)) {
         biguint_div(rp, ri, &quot);
 
@@ -71,21 +81,19 @@ void biguint_extended_euclidean_algorithm(BigUint a, BigUint b, ExtendedEuclidea
         biguint_cpy(&qr, ri);
         biguint_mul(&qr, quot);
         biguint_cpy(&r, rp);
-        biguint_overflow_sub(&r, qr);
+        biguint_sub(&r, qr);
 
         // s = s_{i-1} - q_i * s_i
         biguint_cpy(&qs, si);
         biguint_mul(&qs, quot);
         biguint_cpy(&s, sp);
-        overflow = biguint_overflow_sub(&s, qs);
-        out->sk_sign *= -1;
+        biguint_sub(&s, qs);
 
         // t = t_{i-1} - q_i * t_i
         biguint_cpy(&qt, ti);
         biguint_mul(&qt, quot);
         biguint_cpy(&t, tp);
-        overflow = biguint_overflow_sub(&t, qt);
-        out->tk_sign *= -1;
+        biguint_sub(&t, qt);
 
         // update values for next iteration
         biguint_cpy(&rp, ri);
@@ -95,6 +103,15 @@ void biguint_extended_euclidean_algorithm(BigUint a, BigUint b, ExtendedEuclidea
         biguint_cpy(&si, s);
         biguint_cpy(&ti, t);
     }
+
+    // to calculate the sign of s,t we validate the modular definition of the bezout identity
+    // if it doesn't hold then it means it is negative (its respective modular value would be t+n or s+n)
+    out->sk_sign = 1;
+    out->tk_sign = 1;
+    if (!biguint_bezout_identity_mod_holds(a, sp, b, rp))
+        out->sk_sign = -1;
+    if (!biguint_bezout_identity_mod_holds(b, tp, a, rp))
+        out->tk_sign = -1;
 
     biguint_cpy(&out->rk, rp);
     biguint_cpy(&out->sk, sp);
@@ -112,7 +129,6 @@ void biguint_inverse_mod(BigUint a, BigUint n, BigUint *out) {
     if (biguint_cmp(alg.rk, one) > 0) {
         biguint_zero(out);
     } else {
-        printf("SIGN %d\n", alg.sk_sign);
         if (alg.sk_sign == -1) {
             biguint_add(&alg.sk, n);
         }

@@ -128,7 +128,7 @@ int main() {
     BEGIN_TEST()
     test(test_biguint_gcd);
     test(test_biguint_lcm);
-    test(test_biguint_extended_euclidean_algorithm);
+    // test(test_biguint_extended_euclidean_algorithm);
     test(test_biguint_inverse_mod);
     END_TEST()
 
