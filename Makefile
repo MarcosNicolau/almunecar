@@ -43,7 +43,7 @@ install: headers_install $(patsubst %, $(INSTALL_LIB_DIR)/libalmunecar_%.so, $(L
 # Build shared library for each lib into build directory
 $(LIB_BUILD_DIR)/lib%.so: $(OBJ_BUILD_DIR)/% | $(LIB_BUILD_DIR) $(OBJ_BUILD_DIR)
 	$(eval include libs/$*/deps.mk)
-	@$(CC) $(LDFLAGS) -L$(LIB_BUILD_DIR) $(patsubst %, -l%, $(DEPS)) -o $@ $(wildcard $(OBJ_BUILD_DIR)/$*/*.o)
+	@$(CC) $(LDFLAGS) $(wildcard $(OBJ_BUILD_DIR)/$*/*.o) -L$(LIB_BUILD_DIR) $(patsubst %, -l%, $(DEPS)) -o $@
 
 # Build objects of each library into build dir
 $(OBJ_BUILD_DIR)/%: 
@@ -55,7 +55,7 @@ $(OBJ_BUILD_DIR)/%:
 # Build shared library for each lib into INSTALL_LIB_DIR directory
 $(INSTALL_LIB_DIR)/libalmunecar_%.so: $(OBJ_BUILD_DIR)/%
 	$(eval include libs/$*/deps.mk)
-	@$(CC) $(LDFLAGS) -L$(INSTALL_LIB_DIR) $(patsubst %, -l%, $(DEPS)) -o $@ $(wildcard $(OBJ_BUILD_DIR)/$*/*.o)
+	@$(CC) $(LDFLAGS) $(wildcard $(OBJ_BUILD_DIR)/$*/*.o) -L$(INSTALL_LIB_DIR) $(patsubst %, -l%, $(DEPS)) -o $@ 
 
 # Create necessary directories
 $(LIB_BUILD_DIR) $(INCLUDE_BUILD_DIR) $(OBJ_BUILD_DIR) $(TESTS_BUILD_DIR):
