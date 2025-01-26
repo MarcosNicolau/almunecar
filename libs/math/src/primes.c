@@ -5,6 +5,7 @@ int biguint_is_prime_solovay_strassen(BigUint p);
 int jacobi(BigUint a, BigUint n);
 
 void biguint_random_prime(BigUint *a) {
+    biguint_random(a);
     while (!biguint_is_prime(*a)) {
         biguint_random(a);
     }
