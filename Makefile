@@ -1,7 +1,7 @@
 # Project settings
 PROJECT_NAME = almunecar
 BUILD_DIR = build
-LIBS = utils primitive-types math hashes # List of libraries in dependency order
+LIBS = utils primitive-types math hashes digital-signature # List of libraries in dependency order
 SRC_DIR = src
 INCLUDE_DIR = include
 TEST_DIR = tests
@@ -98,6 +98,9 @@ test_%: build $(TESTS_BUILD_DIR)
 		$(eval include libs/$*/deps.mk) \
 		$(CC) $(CFLAGS) -I$(INCLUDE_BUILD_DIR) -o $(TESTS_BUILD_DIR)/$*/$$(basename $$test .c) $$test -L$(LIB_BUILD_DIR) $(patsubst %, -l%, $(DEPS)) -l$*; \
 		FAIL_FAST=$(FAIL_FAST) LD_LIBRARY_PATH=$(LIB_BUILD_DIR) $(TESTS_BUILD_DIR)/$*/$$(basename $$test .c); \
+		if [ $$? -ne 0 ]; then \
+			exit 1; \
+		fi; \
 	done
 
 check_fmt: ## Checks formatting and outputs the diff
