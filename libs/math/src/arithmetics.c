@@ -60,6 +60,10 @@ void biguint_extended_euclidean_algorithm(BigUint a, BigUint b, ExtendedEuclidea
     BigUint t = biguint_new_heap(a.size);
     BigUint qt = biguint_new_heap(a.size);
 
+    int overflow;
+    out->sk_sign = 1;
+    out->tk_sign = 1;
+
     while (!biguint_is_zero(ri)) {
         biguint_div(rp, ri, &quot);
 
@@ -67,19 +71,21 @@ void biguint_extended_euclidean_algorithm(BigUint a, BigUint b, ExtendedEuclidea
         biguint_cpy(&qr, ri);
         biguint_mul(&qr, quot);
         biguint_cpy(&r, rp);
-        biguint_sub(&r, qr);
+        biguint_overflow_sub(&r, qr);
 
         // s = s_{i-1} - q_i * s_i
         biguint_cpy(&qs, si);
         biguint_mul(&qs, quot);
         biguint_cpy(&s, sp);
-        biguint_sub(&s, qs);
+        overflow = biguint_overflow_sub(&s, qs);
+        out->sk_sign *= -1;
 
         // t = t_{i-1} - q_i * t_i
         biguint_cpy(&qt, ti);
         biguint_mul(&qt, quot);
         biguint_cpy(&t, tp);
-        biguint_sub(&t, qt);
+        overflow = biguint_overflow_sub(&t, qt);
+        out->tk_sign *= -1;
 
         // update values for next iteration
         biguint_cpy(&rp, ri);
@@ -94,4 +100,25 @@ void biguint_extended_euclidean_algorithm(BigUint a, BigUint b, ExtendedEuclidea
     biguint_cpy(&out->sk, sp);
     biguint_cpy(&out->tk, tp);
     biguint_free(&rp, &ri, &sp, &si, &tp, &ti, &quot, &r, &qr, &s, &qs, &t, &qt);
+}
+
+void biguint_inverse_mod(BigUint a, BigUint n, BigUint *out) {
+    ExtendedEuclideanAlgorithm alg = extended_euclidean_algorithm_new_heap(out->size);
+    biguint_extended_euclidean_algorithm(a, n, &alg);
+
+    BigUint one = biguint_new_heap(out->size);
+    biguint_one(&one);
+
+    if (biguint_cmp(alg.rk, one) > 0) {
+        biguint_zero(out);
+    } else {
+        printf("SIGN %d\n", alg.sk_sign);
+        if (alg.sk_sign == -1) {
+            biguint_add(&alg.sk, n);
+        }
+        biguint_cpy(out, alg.sk);
+    }
+
+    biguint_free(&one);
+    extended_euclidean_algorithm_free(alg);
 }

@@ -80,11 +80,56 @@ void test_biguint_extended_euclidean_algorithm() {
         4, "161", "28", "7", "115792089237316195423570985008687907853269984665640564039457584007913129639935", "6");
 }
 
+void test_biguint_inverse_mod_inner(int size, char *a, char *n, char *expected) {
+    BigUint x = biguint_new_heap(size);
+    BigUint y = biguint_new_heap(size);
+    biguint_from_dec_string(a, &x);
+    biguint_from_dec_string(n, &y);
+    BigUint result = biguint_new_heap(size);
+    biguint_inverse_mod(x, y, &result);
+
+    BigUint expected_inverse = biguint_new_heap(size);
+    biguint_from_dec_string(expected, &expected_inverse);
+
+    assert_that(biguint_cmp(result, expected_inverse) == 0);
+    biguint_free(&x, &y, &result, &expected_inverse);
+}
+
+void test_biguint_inverse_mod() {
+    test_biguint_inverse_mod_inner(4, "13", "28", "13");
+    // if numbers are not comprime, then we expect the output to be zero
+    test_biguint_inverse_mod_inner(4, "14", "28", "0");
+
+    test_biguint_inverse_mod_inner(4, "1234567890123456789012345678901234567890123456789012345678901234",
+                                   "115792089237316195423570985008687907853269984665640564039457584007913129639747",
+                                   "84596425267770677564935741578703644467687671628434139713891761663354215487081");
+
+    test_biguint_inverse_mod_inner(4, "57896044618658097711785492504343953926634992332820282019728792003956564819967",
+                                   "115792089237316195423570985008687907853269984665640564039457584007913129639747",
+                                   "85450846602939224430228855247053108469258063550044908221631799963058887113824");
+
+    test_biguint_inverse_mod_inner(4, "57896044618658097711785492504343953926634992332820282019728792003956564819968",
+                                   "115792089237316195423570985008687907853269984665640564039457584007913129639747",
+                                   "72293473703721222539584001222355413368708244394421092892359761444093911626932");
+
+    test_biguint_inverse_mod_inner(
+        4, "1", "115792089237316195423570985008687907853269984665640564039457584007913129639747", "1");
+
+    test_biguint_inverse_mod_inner(4, "115792089237316195423570985008687907853269984665640564039457584007913129639746",
+                                   "115792089237316195423570985008687907853269984665640564039457584007913129639747",
+                                   "115792089237316195423570985008687907853269984665640564039457584007913129639746");
+
+    test_biguint_inverse_mod_inner(4, "115792089237316195423570985008687907853269984665640564039457584007913129639747",
+                                   "115792089237316195423570985008687907853269984665640564039457584007913129639747",
+                                   "0");
+}
+
 int main() {
     BEGIN_TEST()
     test(test_biguint_gcd);
     test(test_biguint_lcm);
     test(test_biguint_extended_euclidean_algorithm);
+    test(test_biguint_inverse_mod);
     END_TEST()
 
     return 0;
