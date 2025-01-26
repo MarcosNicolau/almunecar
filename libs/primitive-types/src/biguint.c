@@ -28,8 +28,15 @@ void biguint_from_u64(uint64_t a, BigUint *out) {
 }
 
 void biguint_cpy(BigUint *dst, BigUint src) {
+    int limit = dst->size;
+    if (dst->size > src.size)
+        limit = src.size;
+
     for (int i = 0; i < dst->size; i++) {
-        dst->limbs[i] = src.limbs[i];
+        if (i < limit)
+            dst->limbs[i] = src.limbs[i];
+        else
+            dst->limbs[i] = 0;
     }
 }
 
@@ -126,6 +133,8 @@ char *biguint_to_dec_string(BigUint a) {
         dst[k] = result[i + k];
         k++;
     }
+    dst[k - 1] = '\0';
+
     biguint_free_limbs(&ten);
     biguint_free_limbs(&dividend);
     biguint_free_limbs(&quot);
@@ -180,6 +189,11 @@ int biguint_overflow_add(BigUint *a, BigUint b) {
     return carry > 0;
 };
 
+void biguint_add_mod(BigUint *a, BigUint b, BigUint m) {
+    biguint_add(a, b);
+    biguint_mod(*a, m, a);
+}
+
 int biguint_overflow_sub(BigUint *a, BigUint b) {
     uint64_t carry = 0;
     for (int i = 0; i < a->size; i++) {
@@ -190,6 +204,11 @@ int biguint_overflow_sub(BigUint *a, BigUint b) {
     }
     return carry > 0;
 };
+
+void biguint_sub_mod(BigUint *a, BigUint b, BigUint m) {
+    biguint_sub(a, b);
+    biguint_mod(*a, m, a);
+}
 
 int biguint_overflow_mul(BigUint *a, BigUint b) {
     uint64_t result[a->size * 2];
@@ -222,11 +241,112 @@ int biguint_overflow_mul(BigUint *a, BigUint b) {
     return overflow;
 };
 
+void biguint_mul_mod(BigUint *a, BigUint b, BigUint m) {
+    // allocate twice the memory to prevent overflow
+    BigUint x = biguint_new_heap(a->size * 2);
+    BigUint y = biguint_new_heap(b.size * 2);
+    BigUint mod = biguint_new_heap(b.size * 2);
+    biguint_cpy(&x, *a);
+    biguint_cpy(&y, b);
+    biguint_cpy(&mod, m);
+
+    biguint_mul(&x, y);
+    biguint_mod(x, mod, &x);
+    biguint_cpy(a, x);
+
+    biguint_free(&x, &y, &mod);
+}
+
+// https://en.wikipedia.org/wiki/Exponentiation_by_squaring
+int biguint_overflow_pow(BigUint *a, BigUint exponent) {
+    if (biguint_is_zero(exponent)) {
+        biguint_one(a);
+        return 0;
+    }
+
+    int overflow = 0;
+    BigUint one = biguint_new_heap(a->size);
+    BigUint exp = biguint_new_heap(exponent.size);
+    BigUint y = biguint_new_heap(a->size);
+    biguint_one(&y);
+    biguint_one(&one);
+    biguint_cpy(&exp, exponent);
+
+    while (biguint_cmp(exp, one) > 0) {
+        if (biguint_is_even(exp)) {
+            overflow |= biguint_overflow_mul(a, *a);
+            biguint_shr(&exp, 1);
+        } else {
+            overflow |= biguint_overflow_mul(&y, *a);
+            overflow |= biguint_overflow_mul(a, *a);
+            biguint_sub(&exp, one);
+            biguint_shr(&exp, 1);
+        }
+    }
+
+    overflow |= biguint_overflow_mul(a, y);
+
+    biguint_free(&one, &exp, &y);
+    return overflow;
+}
+
+// performs a pow operation keeping the result in bounds over a mod m, using the following identity:
+// (a ⋅ b) mod m = [(a mod m) ⋅ (b mod m)] mod m
+// https://en.wikipedia.org/wiki/Modular_exponentiation
+void biguint_pow_mod(BigUint *a, BigUint exponent, BigUint m) {
+    if (biguint_is_zero(exponent)) {
+        biguint_one(a);
+        return;
+    }
+
+    // Since this is the power over a boundary, we want to prevent overflows during multiplication
+    // so we have to allocate twice the memory
+    // in the end we wrap it around the m and it should fit back into the initial size
+    //
+    // note that we could use mul_mod but this way we avoid
+    // allocating and freeing memory on the heap every iteration as mul_mod does it for use
+    BigUint base = biguint_new_heap(a->size * 2);
+    BigUint mod = biguint_new_heap(a->size * 2);
+    BigUint one = biguint_new_heap(a->size * 2);
+    BigUint exp = biguint_new_heap(exponent.size * 2);
+    BigUint y = biguint_new_heap(a->size * 2);
+    biguint_one(&y);
+    biguint_cpy(&base, *a);
+    biguint_cpy(&mod, m);
+    biguint_one(&one);
+    biguint_cpy(&exp, exponent);
+
+    biguint_mod(base, mod, &base);
+    while (biguint_cmp(exp, one) > 0) {
+        if (biguint_is_even(exp)) {
+            biguint_mul(&base, base);
+            biguint_mod(base, mod, &base);
+            biguint_shr(&exp, 1);
+        } else {
+            biguint_mul(&y, base);
+            biguint_mod(y, mod, &y);
+            biguint_mul(&base, base);
+            biguint_mod(base, mod, &base);
+            biguint_sub(&exp, one);
+            biguint_shr(&exp, 1);
+        }
+    }
+
+    biguint_mul(&base, y);
+    biguint_mod(base, mod, &base);
+
+    biguint_cpy(a, base);
+
+    biguint_free(&base, &mod, &one, &exp, &y);
+}
+
 void biguint_add(BigUint *a, BigUint b) { biguint_overflow_add(a, b); }
 
 void biguint_sub(BigUint *a, BigUint b) { biguint_overflow_sub(a, b); }
 
 void biguint_mul(BigUint *a, BigUint b) { biguint_overflow_mul(a, b); }
+
+void biguint_pow(BigUint *a, BigUint exponent) { biguint_overflow_pow(a, exponent); }
 
 void biguint_bitand(BigUint *a, BigUint b) {
     for (int i = 0; i < a->size; i++)
@@ -319,6 +439,20 @@ void biguint_divmod(BigUint a, BigUint b, BigUint *quot, BigUint *rem) {
 
     biguint_free_limbs(&shift_copy);
 }
+
+void biguint_div(BigUint a, BigUint b, BigUint *out) {
+    BigUint rem = biguint_new_heap(out->size);
+    biguint_divmod(a, b, out, &rem);
+    biguint_free_limbs(&rem);
+}
+
+void biguint_mod(BigUint a, BigUint b, BigUint *out) {
+    BigUint quot = biguint_new_heap(out->size);
+    biguint_divmod(a, b, &quot, out);
+    biguint_free_limbs(&quot);
+}
+
+int biguint_is_even(BigUint a) { return (a.limbs[0] & 1) == 0; }
 
 /**
  * Debugging

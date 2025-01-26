@@ -128,6 +128,18 @@
         return (NAME##_overflow_op){.res = NAME##_from_biguint(result), .overflow = overflow};                         \
     }
 
+/** \
+ * Adds two unsigned integers over modulus m. \
+ *                                                                                                       \
+ * Returns the result in mod m.  \
+ */
+#define DEFINE_UINT_ADD_MOD(NAME, WORDS)                                                                               \
+    NAME NAME##_add_mod(NAME a, NAME b, NAME m) {                                                                      \
+        BigUint result = uint_to_biguint(a);                                                                           \
+        biguint_add_mod(&result, uint_to_biguint(b), uint_to_biguint(m));                                              \
+        return NAME##_from_biguint(result);                                                                            \
+    }
+
 /**                                                                                                                    \
  * Subtracts one unsigned integer from another and detects overflow.                                                   \
  *                                                                                                                     \
@@ -138,6 +150,18 @@
         BigUint result = uint_to_biguint(a);                                                                           \
         int overflow = biguint_overflow_sub(&result, uint_to_biguint(b));                                              \
         return (NAME##_overflow_op){.res = NAME##_from_biguint(result), .overflow = overflow};                         \
+    }
+
+/** \
+ * Substracts two unsigned integers over modulus m. \
+ *                                                                                                       \
+ * Returns the result in mod m.  \
+ */
+#define DEFINE_UINT_SUB_MOD(NAME, WORDS)                                                                               \
+    NAME NAME##_sub_mod(NAME a, NAME b, NAME m) {                                                                      \
+        BigUint result = uint_to_biguint(a);                                                                           \
+        biguint_sub_mod(&result, uint_to_biguint(b), uint_to_biguint(m));                                              \
+        return NAME##_from_biguint(result);                                                                            \
     }
 
 /**
@@ -186,6 +210,7 @@
         biguint_bitnot(&result);                                                                                       \
         return NAME##_from_biguint(result);                                                                            \
     }
+
 /** \
  * Multiplies two unsigned integers and detects overflow. \
  *                                                                                                       \
@@ -196,6 +221,42 @@
         BigUint result = uint_to_biguint(a);                                                                           \
         int overflow = biguint_overflow_mul(&result, uint_to_biguint(b));                                              \
         return (NAME##_overflow_op){.res = NAME##_from_biguint(result), .overflow = overflow};                         \
+    }
+
+/** \
+ * Multiplies two unsigned integers over modulus m. \
+ *                                                                                                       \
+ * Returns the result in mod m.  \
+ */
+#define DEFINE_UINT_MUL_MOD(NAME, WORDS)                                                                               \
+    NAME NAME##_mul_mod(NAME a, NAME b, NAME m) {                                                                      \
+        BigUint result = uint_to_biguint(a);                                                                           \
+        biguint_mul_mod(&result, uint_to_biguint(b), uint_to_biguint(m));                                              \
+        return NAME##_from_biguint(result);                                                                            \
+    }
+
+/** \
+ * Calculates the power of two unsigned integers and detects overflow. \
+ *                                                                                                       \
+ * Returns a structure containing the result and an overflow flag. \
+ */
+#define DEFINE_UINT_OVERFLOW_POW(NAME, WORDS)                                                                          \
+    NAME##_overflow_op NAME##_overflow_pow(NAME a, NAME exponent) {                                                    \
+        BigUint result = uint_to_biguint(a);                                                                           \
+        int overflow = biguint_overflow_pow(&result, uint_to_biguint(exponent));                                       \
+        return (NAME##_overflow_op){.res = NAME##_from_biguint(result), .overflow = overflow};                         \
+    }
+
+/** \
+ * Calculates the power of two unsigned integers over a mod m. \
+ *                                                                                                       \
+ * Returns the result in mod m. \
+ */
+#define DEFINE_UINT_OVERFLOW_POW_MOD(NAME, WORDS)                                                                      \
+    NAME NAME##_pow_mod(NAME a, NAME exponent, NAME m) {                                                               \
+        BigUint result = uint_to_biguint(a);                                                                           \
+        biguint_pow_mod(&result, uint_to_biguint(exponent), uint_to_biguint(m));                                       \
+        return NAME##_from_biguint(result);                                                                            \
     }
 
 /** \
@@ -243,6 +304,34 @@
         biguint_divmod(uint_to_biguint(a), uint_to_biguint(b), &quot, &rem);                                           \
         return (NAME##_div_op){.quot = NAME##_from_biguint(quot), .rem = NAME##_from_biguint(rem)};                    \
     }
+
+/** \
+ * Divides one unsigned integer by another, returning the remainder only
+ */
+#define DEFINE_UINT_DIV(NAME, WORDS)                                                                                   \
+    NAME NAME##_div(NAME a, NAME b) {                                                                                  \
+        BigUint quot = biguint_new(WORDS);                                                                             \
+        biguint_div(uint_to_biguint(a), uint_to_biguint(b), &quot);                                                    \
+        return NAME##_from_biguint(quot);                                                                              \
+    }
+
+/** \
+ * Divides one unsigned integer by another, returning the remainder only
+ */
+#define DEFINE_UINT_MOD(NAME, WORDS)                                                                                   \
+    NAME NAME##_mod(NAME a, NAME b) {                                                                                  \
+        BigUint rem = biguint_new(WORDS);                                                                              \
+        biguint_mod(uint_to_biguint(a), uint_to_biguint(b), &rem);                                                     \
+        return NAME##_from_biguint(rem);                                                                               \
+    }
+
+/** \
+ * Returns:
+ * - 1 if number is even
+ * - 0 if its odd
+ */
+#define DEFINE_UINT_IS_EVEN(NAME, WORDS)                                                                               \
+    int NAME##_is_even(NAME a) { return biguint_is_even(uint_to_biguint(a)); }
 
 #define DEFINE_UINT_ZERO(NAME, WORDS)                                                                                  \
     NAME NAME##_zero() {                                                                                               \
@@ -372,6 +461,7 @@
     DEFINE_UINT_FROM_LIMBS(NAME, WORDS)                                                                                \
     DEFINE_UINT_FROM_BIGUINT(NAME, WORDS)                                                                              \
     DEFINE_UINT_OVERFLOW_ADD(NAME, WORDS)                                                                              \
+    DEFINE_UINT_ADD_MOD(NAME, WORDS)                                                                                   \
     DEFINE_UINT_COMPARE(NAME, WORDS)                                                                                   \
     DEFINE_UINT_RAW_PRINTLN(NAME, WORDS)                                                                               \
     DEFINE_UINT_RAW_PRINT(NAME, WORDS)                                                                                 \
@@ -383,7 +473,9 @@
     DEFINE_UINT_GET_BYTES_BIG_ENDIAN(NAME, WORDS)                                                                      \
     DEFINE_UINT_GET_BYTES_LITTLE_ENDIAN(NAME, WORDS)                                                                   \
     DEFINE_UINT_OVERFLOW_SUB(NAME, WORDS)                                                                              \
+    DEFINE_UINT_SUB_MOD(NAME, WORDS)                                                                                   \
     DEFINE_UINT_OVERFLOW_MUL(NAME, WORDS)                                                                              \
+    DEFINE_UINT_MUL_MOD(NAME, WORDS)                                                                                   \
     DEFINE_UINT_BITAND(NAME, WORDS)                                                                                    \
     DEFINE_UINT_BITOR(NAME, WORDS)                                                                                     \
     DEFINE_UINT_BITXOR(NAME, WORDS)                                                                                    \
@@ -392,6 +484,11 @@
     DEFINE_UINT_SHR(NAME, WORDS)                                                                                       \
     DEFINE_UINT_BITS(NAME, WORDS)                                                                                      \
     DEFINE_UINT_DIV_MOD(NAME, WORDS)                                                                                   \
+    DEFINE_UINT_DIV(NAME, WORDS)                                                                                       \
+    DEFINE_UINT_MOD(NAME, WORDS)                                                                                       \
+    DEFINE_UINT_IS_EVEN(NAME, WORDS)                                                                                   \
+    DEFINE_UINT_OVERFLOW_POW(NAME, WORDS)                                                                              \
+    DEFINE_UINT_OVERFLOW_POW_MOD(NAME, WORDS)                                                                          \
     DEFINE_UINT_FROM_DEC_STRING(NAME, WORDS)                                                                           \
     DEFINE_UINT_TO_STRING(NAME, WORDS)                                                                                 \
     DEFINE_UINT_PRINT(NAME, WORDS)                                                                                     \

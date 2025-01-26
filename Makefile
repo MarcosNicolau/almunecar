@@ -1,7 +1,7 @@
 # Project settings
 PROJECT_NAME = almunecar
 BUILD_DIR = build
-LIBS = utils primitive-types hashes # List of libraries in dependency order
+LIBS = utils primitive-types math hashes digital-signature # List of libraries in dependency order
 SRC_DIR = src
 INCLUDE_DIR = include
 TEST_DIR = tests
@@ -34,12 +34,16 @@ help:
 
 build: headers $(patsubst %, $(LIB_BUILD_DIR)/lib%.so, $(LIBS)) ## Build all libraries
 
+build_%: 
+	@$(MAKE) headers_$*
+	@$(MAKE) $(LIB_BUILD_DIR)/lib$*.so
+
 install: headers_install $(patsubst %, $(INSTALL_LIB_DIR)/libalmunecar_%.so, $(LIBS)) ## Build all libraries
 
 # Build shared library for each lib into build directory
 $(LIB_BUILD_DIR)/lib%.so: $(OBJ_BUILD_DIR)/% | $(LIB_BUILD_DIR) $(OBJ_BUILD_DIR)
 	$(eval include libs/$*/deps.mk)
-	@$(CC) $(LDFLAGS) -L$(LIB_BUILD_DIR) $(patsubst %, -l%, $(DEPS)) -o $@ $(wildcard $(OBJ_BUILD_DIR)/$*/*.o)
+	@$(CC) $(LDFLAGS) $(wildcard $(OBJ_BUILD_DIR)/$*/*.o) -L$(LIB_BUILD_DIR) $(patsubst %, -l%, $(DEPS)) -o $@
 
 # Build objects of each library into build dir
 $(OBJ_BUILD_DIR)/%: 
@@ -51,7 +55,7 @@ $(OBJ_BUILD_DIR)/%:
 # Build shared library for each lib into INSTALL_LIB_DIR directory
 $(INSTALL_LIB_DIR)/libalmunecar_%.so: $(OBJ_BUILD_DIR)/%
 	$(eval include libs/$*/deps.mk)
-	@$(CC) $(LDFLAGS) -L$(INSTALL_LIB_DIR) $(patsubst %, -l%, $(DEPS)) -o $@ $(wildcard $(OBJ_BUILD_DIR)/$*/*.o)
+	@$(CC) $(LDFLAGS) $(wildcard $(OBJ_BUILD_DIR)/$*/*.o) -L$(INSTALL_LIB_DIR) $(patsubst %, -l%, $(DEPS)) -o $@ 
 
 # Create necessary directories
 $(LIB_BUILD_DIR) $(INCLUDE_BUILD_DIR) $(OBJ_BUILD_DIR) $(TESTS_BUILD_DIR):
@@ -60,9 +64,13 @@ $(LIB_BUILD_DIR) $(INCLUDE_BUILD_DIR) $(OBJ_BUILD_DIR) $(TESTS_BUILD_DIR):
 # Copy headers to the include directory
 headers: $(INCLUDE_BUILD_DIR)
 	@for lib in $(LIBS); do \
-		mkdir -p $(INCLUDE_BUILD_DIR)/$$lib; \
-		cp libs/$$lib/$(INCLUDE_DIR)/*.h $(INCLUDE_BUILD_DIR)/$$lib/; \
+		$(MAKE) headers_$$lib; \
 	done
+
+headers_%: $(INCLUDE_BUILD_DIR)
+	@mkdir -p $(INCLUDE_BUILD_DIR)/$*
+	@cp libs/$*/$(INCLUDE_DIR)/*.h $(INCLUDE_BUILD_DIR)/$*/
+
 
 # Copy headers to the include directory in /usr/local/include/almunecar
 headers_install:
@@ -90,6 +98,9 @@ test_%: build $(TESTS_BUILD_DIR)
 		$(eval include libs/$*/deps.mk) \
 		$(CC) $(CFLAGS) -I$(INCLUDE_BUILD_DIR) -o $(TESTS_BUILD_DIR)/$*/$$(basename $$test .c) $$test -L$(LIB_BUILD_DIR) $(patsubst %, -l%, $(DEPS)) -l$*; \
 		FAIL_FAST=$(FAIL_FAST) LD_LIBRARY_PATH=$(LIB_BUILD_DIR) $(TESTS_BUILD_DIR)/$*/$$(basename $$test .c); \
+		if [ $$? -ne 0 ]; then \
+			exit 1; \
+		fi; \
 	done
 
 check_fmt: ## Checks formatting and outputs the diff

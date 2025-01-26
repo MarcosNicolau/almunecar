@@ -3,6 +3,7 @@
 
 #include "u64.h"
 #include <stdlib.h>
+#include <utils/macros.h>
 
 typedef struct {
     uint64_t *limbs; // Pointer to an array of 64-bit integers representing the large integer
@@ -25,6 +26,23 @@ typedef struct {
  */
 #define biguint_new_heap(SIZE)                                                                                         \
     (BigUint) { .size = (SIZE), .limbs = malloc(sizeof(uint64_t) * (SIZE)) }
+
+/**
+ * Frees the memory allocated for one or more BigUint variables.
+ *
+ * @param ... Variadic arguments of BigUint pointers to be freed.
+ *
+ * @example
+ * ```
+ * BigUint a = biguint_new(10);
+ * BigUint b = biguint_new(20);
+ * biguint_free(&a, &b);  // Frees memory for `a` and `b`
+ * ```
+ */
+#define biguint_free(...)                                                                                              \
+    BigUint *ANONYMOUS_VARIABLE(args)[] = {__VA_ARGS__};                                                               \
+    for (size_t i = 0; i < sizeof(ANONYMOUS_VARIABLE(args)) / sizeof(ANONYMOUS_VARIABLE(args)[0]); i++)                \
+        biguint_free_limbs(ANONYMOUS_VARIABLE(args)[i]);
 
 /**
  * Creates a `BigUint` on the stack with a specified number of limbs, all initialized to 0.
@@ -331,6 +349,23 @@ void biguint_mul(BigUint *a, BigUint b);
 int biguint_overflow_add(BigUint *a, BigUint b);
 
 /**
+ * Computes the addition of a + b (mod m).
+ *
+ * @param a Pointer to the first BigUint (result stored here).
+ * @param b The second BigUint to add.
+ * @param m The third BigUint defining the modulus.
+ *
+ * @example
+ * ```
+ * BigUint a = biguint_new(1);
+ * BigUint b = biguint_new(1);
+ * BigUint m = biguint_new(1);
+ * biguint_add_mod(&a, b, m);
+ * ```
+ */
+void biguint_add_mod(BigUint *a, BigUint b, BigUint m);
+
+/**
  * Checks for overflow when subtracting two BigUint values.
  *
  * @param a Pointer to the first BigUint (result stored here).
@@ -345,6 +380,23 @@ int biguint_overflow_add(BigUint *a, BigUint b);
  * ```
  */
 int biguint_overflow_sub(BigUint *a, BigUint b);
+
+/**
+ * Computes the substraction of a - b (mod m).
+ *
+ * @param a Pointer to the first BigUint (result stored here).
+ * @param b The second BigUint to substract.
+ * @param m The third BigUint defining the modulus.
+ *
+ * @example
+ * ```
+ * BigUint a = biguint_new(1);
+ * BigUint b = biguint_new(1);
+ * BigUint m = biguint_new(1);
+ * biguint_sub_mod(&a, b, m);
+ * ```
+ */
+void biguint_sub_mod(BigUint *a, BigUint b, BigUint m);
 
 /**
  * Checks for overflow when multiplying two BigUint values.
@@ -363,6 +415,71 @@ int biguint_overflow_sub(BigUint *a, BigUint b);
 int biguint_overflow_mul(BigUint *a, BigUint b);
 
 /**
+ * Computes the multiplication of a * b (mod m).
+ *
+ * @param a Pointer to the first BigUint (result stored here).
+ * @param b The second BigUint to multiply.
+ * @param m The third BigUint defining the modulus.
+ *
+ * @example
+ * ```
+ * BigUint a = biguint_new(1);
+ * BigUint b = biguint_new(1);
+ * BigUint m = biguint_new(1);
+ * biguint_mul_mod(&a, b, m);
+ * ```
+ */
+void biguint_mul_mod(BigUint *a, BigUint b, BigUint m);
+
+/**
+ * Computes the power of a BigUint to an exponent and checks for overflow.
+ *
+ * @param a Pointer to the base (BigUint).
+ * @param exponent The exponent (BigUint).
+ * @return Returns 1 if the operation overflows, 0 otherwise.
+ *
+ * @example
+ * ```
+ * BigUint base = biguint_new(2);
+ * BigUint exponent = biguint_new(1000);
+ * int has_overflowed = biguint_overflow_pow(&base, exponent);
+ * ```
+ */
+int biguint_overflow_pow(BigUint *a, BigUint exponent);
+
+/**
+ * Computes the power of a BigUint raised to an exponent.
+ *
+ * @param a Pointer to the base (BigUint). The result is stored in this variable.
+ * @param exponent The exponent (BigUint).
+ *
+ * @example
+ * ```
+ * BigUint base = biguint_new(2);
+ * BigUint exponent = biguint_new(10);
+ * biguint_pow(&base, exponent);  // `base` is now 1024
+ * ```
+ */
+void biguint_pow(BigUint *a, BigUint exponent);
+
+/**
+ * Computes the power of a BigUint keeping the result in bounds over a mod m
+ *
+ * @param a Pointer to the base (BigUint). The result is stored in this variable.
+ * @param m The modulus (BigUint). The result is computed modulo this value.
+ * @param exponent The exponent (BigUint). The base `a` is raised to this power.
+ *
+ * @example
+ * ```
+ * BigUint base = biguint_new(2);
+ * BigUint modulus = biguint_new(1000);
+ * BigUint exponent = biguint_new(10);
+ * biguint_pow_mod(&base, modulus, exponent);  // `base` is now (2^10) % 1000 = 24
+ * ```
+ */
+void biguint_pow_mod(BigUint *a, BigUint exponent, BigUint m);
+
+/**
  * Divides one BigUint by another, storing the quotient and remainder.
  *
  * @param a The dividend (BigUint).
@@ -379,6 +496,58 @@ int biguint_overflow_mul(BigUint *a, BigUint b);
  * ```
  */
 void biguint_divmod(BigUint a, BigUint b, BigUint *quot, BigUint *rem);
+
+/**
+ * Computes the quotient of one BigUint divided by another.
+ *
+ * @param a The dividend (BigUint).
+ * @param b The divisor (BigUint).
+ * @param out Pointer to store the quotient.
+ *
+ * @example
+ * ```
+ * BigUint a = biguint_new(10);
+ * BigUint b = biguint_new(2);
+ * BigUint quot;
+ * biguint_div(a, b, &quot);  // Quotient `quot` will be 5
+ * ```
+ */
+void biguint_div(BigUint a, BigUint b, BigUint *out);
+
+/**
+ * Computes the remainder of one BigUint divided by another.
+ *
+ * @param a The dividend (BigUint).
+ * @param b The divisor (BigUint).
+ * @param out Pointer to store the remainder.
+ *
+ * @example
+ * ```
+ * BigUint a = biguint_new(10);
+ * BigUint b = biguint_new(3);
+ * BigUint rem;
+ * biguint_mod(a, b, &rem);  // Remainder `rem` will be 1
+ * ```
+ */
+void biguint_mod(BigUint a, BigUint b, BigUint *out);
+
+/**
+ * Checks if a BigUint is even.
+ *
+ * @param a The BigUint to check.
+ * @return Returns 1 if `a` is even, 0 otherwise.
+ *
+ * @example
+ * ```
+ * BigUint num = biguint_new(10);
+ * if (biguint_is_even(num)) {
+ *     printf("The number is even.\n");
+ * } else {
+ *     printf("The number is odd.\n");
+ * }
+ * ```
+ */
+int biguint_is_even(BigUint a);
 
 /**
  * Performs a bitwise AND between two BigUint values.

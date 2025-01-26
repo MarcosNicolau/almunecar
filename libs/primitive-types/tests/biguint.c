@@ -25,6 +25,17 @@ void test_biguint_overflow_add_with_overflow() {
     assert_that(overflow == 1);
 }
 
+void test_biguint_add_mod() {
+    BigUint first = biguint_new_with_limbs(4, {UINT64_MAX, UINT64_MAX, UINT64_MAX, UINT64_MAX});
+    BigUint second = biguint_new_with_limbs(4, {UINT64_MAX, UINT64_MAX, UINT64_MAX, UINT64_MAX});
+    BigUint mod = biguint_new_with_limbs(4, {UINT64_MAX, 0, 0, 0});
+    BigUint expected_result = biguint_new_with_limbs(4, {UINT64_MAX - 1, 0, 0, 0});
+
+    biguint_add_mod(&first, second, mod);
+
+    assert_that(biguint_cmp(first, expected_result) == 0);
+}
+
 void test_biguint_overflow_sub() {
     BigUint first = biguint_new_with_limbs(4, {18446744073709551615ULL, 18446744073709551615ULL, 1099511627775ULL, 0});
     BigUint second = biguint_new_with_limbs(4, {2919980651337220095ULL, 14019525496019259228ULL, 10995116277ULL, 0});
@@ -47,6 +58,17 @@ void test_biguint_overflow_sub_with_overflow() {
     assert_that(overflow == 1);
 }
 
+void test_biguint_sub_mod() {
+    BigUint first = biguint_new_with_limbs(4, {0, 0, 0, 0});
+    BigUint second = biguint_new_with_limbs(4, {1, 1, 1, 1});
+    BigUint mod = biguint_new_with_limbs(4, {UINT64_MAX, UINT64_MAX, 0, 0});
+    BigUint expected_result = biguint_new_with_limbs(4, {UINT64_MAX - 1, UINT64_MAX - 2, 0, 0});
+
+    biguint_sub_mod(&first, second, mod);
+
+    assert_that(biguint_cmp(first, expected_result) == 0);
+}
+
 void test_biguint_overflow_mul() {
     BigUint first = biguint_new_with_limbs(4, {18446744073709551615ULL, 0, 0, 0});
     BigUint second = biguint_new_with_limbs(4, {2919980651337220095ULL, 0, 0, 0});
@@ -66,6 +88,49 @@ void test_biguint_overflow_mul_with_overflow() {
 
     assert_that(biguint_cmp(first, expected_result) == 0);
     assert_that(overflow == 1);
+}
+
+void test_biguint_mul_mod() {
+    BigUint first = biguint_new_with_limbs(4, {18446744073709551615ULL, 18446744073709551615ULL, 1099511627775ULL, 0});
+    BigUint second = biguint_new_with_limbs(4, {2919980651337220095ULL, 14019525496019259228ULL, 10995116277ULL, 0});
+    BigUint mod = biguint_new_with_limbs(4, {1, 0, 0, 0});
+    BigUint expected_result = biguint_new_with_limbs(4, {0, 0, 0, 0});
+
+    biguint_mul_mod(&first, second, mod);
+
+    assert_that(biguint_cmp(first, expected_result) == 0);
+}
+
+void test_biguint_overflow_pow() {
+    BigUint first = biguint_new_with_limbs(4, {18446744073709551615ULL, 0, 0, 0});
+    BigUint second = biguint_new_with_limbs(4, {2, 0, 0, 0});
+    BigUint expected_result = biguint_new_with_limbs(4, {1, 18446744073709551614ULL, 0, 0});
+    int overflow = biguint_overflow_pow(&first, second);
+
+    assert_that(biguint_cmp(first, expected_result) == 0);
+    assert_that(overflow == 0);
+}
+
+void test_biguint_overflow_pow_with_overflow() {
+    BigUint first = biguint_new_with_limbs(4, {18446744073709551615ULL, 18446744073709551615ULL, 1099511627775ULL, 0});
+    BigUint second = biguint_new_with_limbs(4, {2919980651337220095ULL, 14019525496019259228ULL, 10995116277ULL, 0});
+    BigUint expected_result = biguint_new_with_limbs(
+        4, {18446744073709551615ULL, 18446744073709551615ULL, 17870282221894500351ULL, 14019525494141808257ULL});
+    int overflow = biguint_overflow_pow(&first, second);
+
+    assert_that(biguint_cmp(first, expected_result) == 0);
+    assert_that(overflow == 1);
+}
+
+void test_biguint_overflow_pow_mod() {
+    BigUint first = biguint_new_with_limbs(4, {18446744073709551615ULL, 18446744073709551615ULL, 1099511627775ULL, 0});
+    BigUint exp = biguint_new_with_limbs(4, {2919980651337220095ULL, 14019525496019259228ULL, 10995116277ULL, 0});
+    BigUint mod = biguint_new_with_limbs(4, {2919980651337220095ULL, 14019525496019259228ULL, 10995116277ULL, 0});
+    BigUint expected_result =
+        biguint_new_with_limbs(4, {16397732815629627738ULL, 9206660263325832418ULL, 5229948569ULL, 0});
+    biguint_pow_mod(&first, exp, mod);
+
+    assert_that(biguint_cmp(first, expected_result) == 0);
 }
 
 void test_biguint_bitand() {
@@ -152,6 +217,36 @@ void test_biguint_divmod_without_rem() {
     assert_that(biguint_cmp(rem, expected_rem) == 0);
 }
 
+void test_biguint_div() {
+    BigUint first = biguint_new_with_limbs(4, {18446744073709551615ULL, 18446744073709551615ULL, 1099511627775ULL, 0});
+    BigUint second = biguint_new_with_limbs(4, {2919980651337220095ULL, 14019525496019259228ULL, 10995116277ULL, 0});
+    BigUint quot = biguint_new_with_limbs(4, {0});
+    BigUint expected_quot = biguint_new_with_limbs(4, {100, 0, 0, 0});
+    biguint_div(first, second, &quot);
+
+    assert_that(biguint_cmp(quot, expected_quot) == 0);
+}
+
+void test_biguint_mod() {
+    BigUint first = biguint_new_with_limbs(4, {18446744073709551615ULL, 18446744073709551615ULL, 1099511627775ULL, 0});
+    BigUint second = biguint_new_with_limbs(4, {2919980651337220095ULL, 14019525496019259228ULL, 10995116277ULL, 0});
+    BigUint rem = biguint_new_with_limbs(4, {0});
+    BigUint expected_rem = biguint_new_with_limbs(4, {3149840045630816355, 0, 0, 0});
+    biguint_mod(first, second, &rem);
+
+    assert_that(biguint_cmp(rem, expected_rem) == 0);
+}
+
+void test_biguint_is_even() {
+    BigUint even =
+        biguint_new_with_limbs(4, {18446744073709551614ULL, 18446744073709551615ULL, 18446744073709551615ULL, 0ULL});
+    BigUint odd =
+        biguint_new_with_limbs(4, {18446744073709551615ULL, 18446744073709551615ULL, 18446744073709551615ULL, 1ULL});
+
+    assert_that(biguint_is_even(even));
+    assert_that(!biguint_is_even(odd));
+}
+
 void test_biguint_from_string() {
     BigUint result = biguint_new_with_limbs(4, {0});
     BigUint expected_result =
@@ -236,10 +331,16 @@ int main() {
     BEGIN_TEST();
     test(test_biguint_overflow_add);
     test(test_biguint_overflow_add_with_overflow);
+    test(test_biguint_add_mod);
     test(test_biguint_overflow_sub);
     test(test_biguint_overflow_sub_with_overflow);
+    test(test_biguint_sub_mod);
     test(test_biguint_overflow_mul);
     test(test_biguint_overflow_mul_with_overflow);
+    test(test_biguint_mul_mod);
+    test(test_biguint_overflow_pow);
+    test(test_biguint_overflow_pow_with_overflow);
+    test(test_biguint_overflow_pow_mod);
     test(test_biguint_bitand);
     test(test_biguint_bitor);
     test(test_biguint_bitxor);
@@ -248,6 +349,9 @@ int main() {
     test(test_biguint_shr);
     test(test_biguint_divmod_with_rem);
     test(test_biguint_divmod_without_rem);
+    test(test_biguint_div);
+    test(test_biguint_mod);
+    test(test_biguint_is_even);
     test(test_biguint_from_string);
     test(test_biguint_to_string);
     test(test_biguint_from_u64);

@@ -6,3 +6,5 @@
 - [Gmp lib](https://gmplib.org/)
 - [Multiplication Algorithm](https://en.wikipedia.org/wiki/Multiplication_algorithm)
 - [Division Algorithm](https://en.wikipedia.org/wiki/Division_algorithm)
+- [Exponentiation by squaring](https://simple.wikipedia.org/wiki/Exponentiation_by_squaring)
+- [Modular exponentiation](https://en.wikipedia.org/wiki/Modular_exponentiation)
