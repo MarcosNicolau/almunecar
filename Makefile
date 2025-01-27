@@ -5,12 +5,14 @@ LIBS = utils primitive-types math hashes digital-signature # List of libraries i
 SRC_DIR = src
 INCLUDE_DIR = include
 TEST_DIR = tests
+BENCHMARKS_DIR = benchmarks
 
 # Output directories
 LIB_BUILD_DIR = $(BUILD_DIR)/lib
 INCLUDE_BUILD_DIR = $(BUILD_DIR)/include/$(PROJECT_NAME)
 OBJ_BUILD_DIR = $(BUILD_DIR)/obj
 TESTS_BUILD_DIR = $(BUILD_DIR)/tests
+BENCHMARKS_BUILD_DIR = $(BUILD_DIR)/benchmarks
 
 # Installation directories
 PREFIX = /usr/local
@@ -32,7 +34,10 @@ LDFLAGS = -shared
 help:
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-build: headers $(patsubst %, $(LIB_BUILD_DIR)/lib%.so, $(LIBS)) ## Build all libraries
+build:
+	@for lib in $(LIBS); do \
+		$(MAKE) build_$$lib > /dev/null 2>&1; \
+	done
 
 build_%: 
 	@$(MAKE) headers_$*
@@ -43,7 +48,7 @@ install: headers_install $(patsubst %, $(INSTALL_LIB_DIR)/libalmunecar_%.so, $(L
 # Build shared library for each lib into build directory
 $(LIB_BUILD_DIR)/lib%.so: $(OBJ_BUILD_DIR)/% | $(LIB_BUILD_DIR) $(OBJ_BUILD_DIR)
 	$(eval include libs/$*/deps.mk)
-	@$(CC) $(LDFLAGS) $(wildcard $(OBJ_BUILD_DIR)/$*/*.o) -L$(LIB_BUILD_DIR) $(patsubst %, -l%, $(DEPS)) -o $@
+	@$(CC) $(LDFLAGS) $(wildcard $(OBJ_BUILD_DIR)/$*/*.o) -L$(LIB_BUILD_DIR) $(patsubst %, -l%, $(BUILD_DEPS)) -o $@
 
 # Build objects of each library into build dir
 $(OBJ_BUILD_DIR)/%: 
@@ -55,16 +60,16 @@ $(OBJ_BUILD_DIR)/%:
 # Build shared library for each lib into INSTALL_LIB_DIR directory
 $(INSTALL_LIB_DIR)/libalmunecar_%.so: $(OBJ_BUILD_DIR)/%
 	$(eval include libs/$*/deps.mk)
-	@$(CC) $(LDFLAGS) $(wildcard $(OBJ_BUILD_DIR)/$*/*.o) -L$(INSTALL_LIB_DIR) $(patsubst %, -l%, $(DEPS)) -o $@ 
+	@$(CC) $(LDFLAGS) $(wildcard $(OBJ_BUILD_DIR)/$*/*.o) -L$(INSTALL_LIB_DIR) $(patsubst %, -l%, $(BUILD_DEPS)) -o $@ 
 
 # Create necessary directories
-$(LIB_BUILD_DIR) $(INCLUDE_BUILD_DIR) $(OBJ_BUILD_DIR) $(TESTS_BUILD_DIR):
+$(LIB_BUILD_DIR) $(INCLUDE_BUILD_DIR) $(OBJ_BUILD_DIR) $(TESTS_BUILD_DIR) $(BENCHMARKS_BUILD_DIR):
 	@mkdir -p $@
 
 # Copy headers to the include directory
 headers: $(INCLUDE_BUILD_DIR)
 	@for lib in $(LIBS); do \
-		$(MAKE) headers_$$lib; \
+		$(MAKE) headers_$$lib > /dev/null 2>&1; \
 	done
 
 headers_%: $(INCLUDE_BUILD_DIR)
@@ -96,12 +101,31 @@ test_%: build $(TESTS_BUILD_DIR)
 	@for test in libs/$*/$(TEST_DIR)/*.c; do \
 		mkdir -p $(TESTS_BUILD_DIR)/$*; \
 		$(eval include libs/$*/deps.mk) \
-		$(CC) $(CFLAGS) -I$(INCLUDE_BUILD_DIR) -o $(TESTS_BUILD_DIR)/$*/$$(basename $$test .c) $$test -L$(LIB_BUILD_DIR) $(patsubst %, -l%, $(DEPS)) -l$*; \
+		$(CC) $(CFLAGS) -I$(INCLUDE_BUILD_DIR) -o $(TESTS_BUILD_DIR)/$*/$$(basename $$test .c) $$test -L$(LIB_BUILD_DIR) $(patsubst %, -l%, $(TESTS_DEPS)) -l$*; \
 		FAIL_FAST=$(FAIL_FAST) LD_LIBRARY_PATH=$(LIB_BUILD_DIR) $(TESTS_BUILD_DIR)/$*/$$(basename $$test .c); \
 		if [ $$? -ne 0 ]; then \
 			exit 1; \
 		fi; \
 	done
+
+benchmark: build $(BENCHMARKS_BUILD_DIR) ## Run benchmarks for all libs. To run only the benchmarks of a specific lib run do benchmark_<LIB_NAME>, for example: make benchmark_primitive-types. 
+	@for lib in $(LIBS); do \
+	 $(MAKE) benchmark_$$lib; 	\
+	done
+
+benchmark_%: build $(BENCHMARKS_BUILD_DIR) 
+	@if [ -d "libs/$*/$(BENCHMARKS_DIR)" ]; then \
+		for benchmark in libs/$*/$(BENCHMARKS_DIR)/*.c; do \
+			mkdir -p $(BENCHMARKS_BUILD_DIR)/$*; \
+			$(eval include libs/$*/deps.mk) \
+			$(CC) $(CFLAGS) -I$(INCLUDE_BUILD_DIR) -o $(BENCHMARKS_BUILD_DIR)/$*/$$(basename $$benchmark .c) $$benchmark -L$(LIB_BUILD_DIR) $(patsubst %, -l%, $(BENCHMARKS_DEPS)) -l$*; \
+			FAIL_FAST=$(FAIL_FAST) LD_LIBRARY_PATH=$(LIB_BUILD_DIR) $(BENCHMARKS_BUILD_DIR)/$*/$$(basename $$benchmark .c); \
+			if [ $$? -ne 0 ]; then \
+				exit 1; \
+			fi; \
+		done \
+	fi
+
 
 check_fmt: ## Checks formatting and outputs the diff
 	@./scripts/fmt.sh libs
