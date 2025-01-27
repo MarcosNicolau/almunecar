@@ -11,6 +11,8 @@ on:
 jobs:
   run_benchmarks:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
 
     steps:
       - uses: actions/checkout@v4
@@ -23,4 +25,4 @@ jobs:
       - name: "Post benchmark results in pr comment"
         uses: mshick/add-pr-comment@v2
         with:
-          message-path: benchmark_table.md
+          message: benchmark_table.md
