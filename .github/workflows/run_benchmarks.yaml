@@ -25,4 +25,4 @@ jobs:
       - name: "Post benchmark results in pr comment"
         uses: mshick/add-pr-comment@v2
         with:
-          message: benchmark_table.md
+          message-path: benchmark_table.md
