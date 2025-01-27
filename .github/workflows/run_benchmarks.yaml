@@ -1,0 +1,25 @@
+name: "Benchmarks"
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: ["*"]
+    paths:
+      - "libs/**"
+
+jobs:
+  compile_and_test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Compile"
+        run: make build
+      - name: "Run benchmarks"
+        run: |
+          make benchmark > benchmark_results.txt
+          make benchmark_prettify BENCHMARK_FILE=benchmark_results.txt > benchmark_table.md
+      - name: "Post benchmark results in pr comment"
+        uses: mshick/add-pr-comment@v2
+        with:
+          message-path: benchmark_table.md
