@@ -110,7 +110,7 @@ test_%: build $(TESTS_BUILD_DIR)
 
 benchmark: build $(BENCHMARKS_BUILD_DIR) ## Run benchmarks for all libs. To run only the benchmarks of a specific lib run do benchmark_<LIB_NAME>, for example: make benchmark_primitive-types. 
 	@for lib in $(LIBS); do \
-	 $(MAKE) benchmark_$$lib; 	\
+		$(MAKE) benchmark_$$lib; 	\
 	done
 
 benchmark_%: build $(BENCHMARKS_BUILD_DIR) 
@@ -125,6 +125,9 @@ benchmark_%: build $(BENCHMARKS_BUILD_DIR)
 			fi; \
 		done \
 	fi
+
+benchmark_prettify: ## Given a file with the output of a benchmark, it runs a prettify script to show it as a markdown table
+	@./scripts/prettify_benchmark.sh $(BENCHMARK_FILE)
 
 
 check_fmt: ## Checks formatting and outputs the diff
