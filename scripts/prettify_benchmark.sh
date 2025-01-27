@@ -1,3 +1,5 @@
+#!/bin/bash
+
 FILE=$1
 RESULTS=$(cat $FILE)
 
