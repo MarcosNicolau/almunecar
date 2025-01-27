@@ -9,10 +9,11 @@ on:
       - "libs/**"
 
 jobs:
-  compile_and_test:
+  run_benchmarks:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v4
       - name: "Compile"
         run: make build
       - name: "Run benchmarks"
