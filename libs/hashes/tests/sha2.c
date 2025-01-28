@@ -2,10 +2,6 @@
 #include <string.h>
 #include <utils/test.h>
 
-#include <hashes/sha256.h>
-#include <string.h>
-#include <utils/test.h>
-
 void test_sha256_empty() {
     sha256 hash = sha256_new();
     sha256_update(&hash, (uint8_t *)"", 0);
