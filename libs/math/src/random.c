@@ -1,13 +1,15 @@
 #include <random.h>
 
+static FILE *urandom_file = NULL;
+
 uint64_t u64_random() {
     uint64_t randval;
-    FILE *f;
 
-    // use urandom https://sockpuppet.org/blog/2014/02/25/safely-generate-random-numbers/
-    f = fopen("/dev/urandom", "r");
-    fread(&randval, sizeof(randval), 1, f);
-    fclose(f);
+    if (urandom_file == NULL) {
+        // use urandom https://sockpuppet.org/blog/2014/02/25/safely-generate-random-numbers/
+        urandom_file = fopen("/dev/urandom", "r");
+    }
+    fread(&randval, sizeof(randval), 1, urandom_file);
 
     return randval;
 }
