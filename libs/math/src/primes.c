@@ -8,6 +8,8 @@ void biguint_random_prime(BigUint *a) {
     biguint_random(a);
     while (!biguint_is_prime(*a)) {
         biguint_random(a);
+        // make it odd
+        a->limbs[0] |= 1;
     }
 }
 

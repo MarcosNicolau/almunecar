@@ -29,7 +29,7 @@ uint32_t sigma1(uint32_t x) { return rotr(x, 17) ^ rotr(x, 19) ^ (x >> 10); };
 
 void sha256_process(sha256 *hash) {
     uint32_t w[64];
-    memset(w, 0, 64);
+    memset(w, 0, 64 * sizeof(uint32_t));
 
     // we need to fit the 64 entries bytes into 16 entries
     // so each entry needs to have a size of 4 bytes

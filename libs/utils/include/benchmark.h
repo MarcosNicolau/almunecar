@@ -3,9 +3,9 @@
 #include <time.h>
 #include <utils/macros.h>
 
-#define benchmark(benchmark_fn, iterations, ...)                                                                       \
+#define benchmark(name, benchmark_fn, iterations, ...)                                                                 \
     do {                                                                                                               \
-        printf("\n=============== %s (%d iterations) ===============\n", #benchmark_fn, iterations);                   \
+        printf("\n=============== %s (%d iterations) ===============\n", name, iterations);                            \
         int ANONYMOUS_VARIABLE(benchmark_fn) = 0;                                                                      \
         double measures[iterations];                                                                                   \
         for (; ANONYMOUS_VARIABLE(benchmark_fn) < iterations; ANONYMOUS_VARIABLE(benchmark_fn)++) {                    \
