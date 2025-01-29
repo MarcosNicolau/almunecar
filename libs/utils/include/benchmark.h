@@ -5,7 +5,7 @@
 
 #define benchmark(benchmark_fn, iterations, ...)                                                                       \
     do {                                                                                                               \
-        printf("\n=============== %s (%d iterations) ===============\n", #benchmark_fn, iterations);                   \
+        printf("\n=============== %s %s (%d iterations) ===============\n", #benchmark_fn, #__VA_ARGS__, iterations);  \
         int ANONYMOUS_VARIABLE(benchmark_fn) = 0;                                                                      \
         double measures[iterations];                                                                                   \
         for (; ANONYMOUS_VARIABLE(benchmark_fn) < iterations; ANONYMOUS_VARIABLE(benchmark_fn)++) {                    \
