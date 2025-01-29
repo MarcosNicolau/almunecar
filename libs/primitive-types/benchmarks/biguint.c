@@ -56,11 +56,11 @@ void benchmark_pow_mod() {
 
 int main() {
     BEGIN_BENCHMARK();
-    benchmark(benchmark_add, 1000000);
-    benchmark(benchmark_sub, 1000000);
-    benchmark(benchmark_divmod, 1000000);
-    benchmark(benchmark_mul, 1000000);
-    benchmark(benchmark_pow, 1000);
-    benchmark(benchmark_pow_mod, 10);
+    benchmark("biguint_add random 1024 bits", benchmark_add, 1000000);
+    benchmark("biguint_sub random 1024 bits", benchmark_sub, 1000000);
+    benchmark("biguint_divmod random 1024 bits", benchmark_divmod, 1000000);
+    benchmark("biguint_mul random 1024 bits", benchmark_mul, 1000000);
+    benchmark("biguint_pow random 1024 bits", benchmark_pow, 1000);
+    benchmark("biguint_pow_mod random 1024 bits", benchmark_pow_mod, 10);
     END_BENCHMARK();
 }
