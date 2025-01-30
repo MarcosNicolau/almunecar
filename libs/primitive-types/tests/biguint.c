@@ -8,7 +8,7 @@ void test_biguint_overflow_add() {
     BigUint expected_result =
         biguint_new_with_limbs(4, {18446744073709551614ULL, 18446744073709551615ULL, 2199023255551ULL, 0});
 
-    int overflow = biguint_overflow_add(&first, second);
+    int overflow = biguint_overflow_add(first, second, &first);
 
     assert_that(biguint_cmp(first, expected_result) == 0);
     assert_that(overflow == 0);
@@ -19,7 +19,7 @@ void test_biguint_overflow_add_with_overflow() {
     BigUint second = biguint_new_with_limbs(4, {UINT64_MAX, UINT64_MAX, UINT64_MAX, UINT64_MAX});
     BigUint expected_result = biguint_new_with_limbs(4, {UINT64_MAX - 1, UINT64_MAX, UINT64_MAX, UINT64_MAX});
 
-    int overflow = biguint_overflow_add(&first, second);
+    int overflow = biguint_overflow_add(first, second, &first);
 
     assert_that(biguint_cmp(first, expected_result) == 0);
     assert_that(overflow == 1);
@@ -31,7 +31,7 @@ void test_biguint_add_mod() {
     BigUint mod = biguint_new_with_limbs(4, {UINT64_MAX, 0, 0, 0});
     BigUint expected_result = biguint_new_with_limbs(4, {UINT64_MAX - 1, 0, 0, 0});
 
-    biguint_add_mod(&first, second, mod);
+    biguint_add_mod(first, second, mod, &first);
 
     assert_that(biguint_cmp(first, expected_result) == 0);
 }
@@ -42,7 +42,7 @@ void test_biguint_overflow_sub() {
     BigUint expected_result =
         biguint_new_with_limbs(4, {15526763422372331520ULL, 4427218577690292387ULL, 1088516511498ULL, 0});
 
-    int overflow = biguint_overflow_sub(&first, second);
+    int overflow = biguint_overflow_sub(first, second, &first);
 
     assert_that(biguint_cmp(first, expected_result) == 0);
     assert_that(overflow == 0);
@@ -52,7 +52,7 @@ void test_biguint_overflow_sub_with_overflow() {
     BigUint first = biguint_new_with_limbs(4, {0, 0, 0, 0});
     BigUint second = biguint_new_with_limbs(4, {1, 1, 1, 1});
     BigUint expected_result = biguint_new_with_limbs(4, {UINT64_MAX, UINT64_MAX - 1, UINT64_MAX - 1, UINT64_MAX - 1});
-    int overflow = biguint_overflow_sub(&first, second);
+    int overflow = biguint_overflow_sub(first, second, &first);
 
     assert_that(biguint_cmp(first, expected_result) == 0);
     assert_that(overflow == 1);
@@ -64,7 +64,7 @@ void test_biguint_sub_mod() {
     BigUint mod = biguint_new_with_limbs(4, {UINT64_MAX, UINT64_MAX, 0, 0});
     BigUint expected_result = biguint_new_with_limbs(4, {UINT64_MAX - 1, UINT64_MAX - 2, 0, 0});
 
-    biguint_sub_mod(&first, second, mod);
+    biguint_sub_mod(first, second, mod, &first);
 
     assert_that(biguint_cmp(first, expected_result) == 0);
 }
@@ -73,7 +73,7 @@ void test_biguint_overflow_mul() {
     BigUint first = biguint_new_with_limbs(4, {18446744073709551615ULL, 0, 0, 0});
     BigUint second = biguint_new_with_limbs(4, {2919980651337220095ULL, 0, 0, 0});
     BigUint expected_result = biguint_new_with_limbs(4, {15526763422372331521ULL, 2919980651337220094ULL, 0, 0});
-    int overflow = biguint_overflow_mul(&first, second);
+    int overflow = biguint_overflow_mul(first, second, &first);
 
     assert_that(biguint_cmp(first, expected_result) == 0);
     assert_that(overflow == 0);
@@ -84,7 +84,7 @@ void test_biguint_overflow_mul_with_overflow() {
     BigUint second = biguint_new_with_limbs(4, {2919980651337220095ULL, 14019525496019259228ULL, 10995116277ULL, 0});
     BigUint expected_result = biguint_new_with_limbs(
         4, {15526763422372331521ULL, 4427218577690292387ULL, 17870282210899384074ULL, 14019525494141808257ULL});
-    int overflow = biguint_overflow_mul(&first, second);
+    int overflow = biguint_overflow_mul(first, second, &first);
 
     assert_that(biguint_cmp(first, expected_result) == 0);
     assert_that(overflow == 1);
@@ -96,7 +96,7 @@ void test_biguint_mul_mod() {
     BigUint mod = biguint_new_with_limbs(4, {1, 0, 0, 0});
     BigUint expected_result = biguint_new_with_limbs(4, {0, 0, 0, 0});
 
-    biguint_mul_mod(&first, second, mod);
+    biguint_mul_mod(first, second, mod, &first);
 
     assert_that(biguint_cmp(first, expected_result) == 0);
 }
@@ -105,7 +105,7 @@ void test_biguint_overflow_pow() {
     BigUint first = biguint_new_with_limbs(4, {18446744073709551615ULL, 0, 0, 0});
     BigUint second = biguint_new_with_limbs(4, {2, 0, 0, 0});
     BigUint expected_result = biguint_new_with_limbs(4, {1, 18446744073709551614ULL, 0, 0});
-    int overflow = biguint_overflow_pow(&first, second);
+    int overflow = biguint_overflow_pow(first, second, &first);
 
     assert_that(biguint_cmp(first, expected_result) == 0);
     assert_that(overflow == 0);
@@ -116,7 +116,7 @@ void test_biguint_overflow_pow_with_overflow() {
     BigUint second = biguint_new_with_limbs(4, {2919980651337220095ULL, 14019525496019259228ULL, 10995116277ULL, 0});
     BigUint expected_result = biguint_new_with_limbs(
         4, {18446744073709551615ULL, 18446744073709551615ULL, 17870282221894500351ULL, 14019525494141808257ULL});
-    int overflow = biguint_overflow_pow(&first, second);
+    int overflow = biguint_overflow_pow(first, second, &first);
 
     assert_that(biguint_cmp(first, expected_result) == 0);
     assert_that(overflow == 1);
@@ -128,7 +128,7 @@ void test_biguint_overflow_pow_mod() {
     BigUint mod = biguint_new_with_limbs(4, {2919980651337220095ULL, 14019525496019259228ULL, 10995116277ULL, 0});
     BigUint expected_result =
         biguint_new_with_limbs(4, {16397732815629627738ULL, 9206660263325832418ULL, 5229948569ULL, 0});
-    biguint_pow_mod(&first, exp, mod);
+    biguint_pow_mod(first, exp, mod, &first);
 
     assert_that(biguint_cmp(first, expected_result) == 0);
 }
@@ -139,7 +139,7 @@ void test_biguint_bitand() {
     BigUint second = biguint_new_with_limbs(4, {2919980651337220095ULL, 14019525496019259228ULL, 10995116277ULL, 0});
     BigUint expected_result =
         biguint_new_with_limbs(4, {2919980651337220095ULL, 14019525496019259228ULL, 10995116277ULL, 0});
-    biguint_bitand(&first, second);
+    biguint_bitand(first, second, &first);
 
     assert_that(biguint_cmp(first, expected_result) == 0);
 }
@@ -149,7 +149,7 @@ void test_biguint_bitor() {
     BigUint second = biguint_new_with_limbs(4, {2919980651337220095ULL, 14019525496019259228ULL, 10995116277ULL, 1ULL});
     BigUint expected_result =
         biguint_new_with_limbs(4, {18446744073709551615ULL, 18446744073709551615ULL, 1099511627775ULL, 1});
-    biguint_bitor(&first, second);
+    biguint_bitor(first, second, &first);
 
     assert_that(biguint_cmp(first, expected_result) == 0);
 }
@@ -159,7 +159,7 @@ void test_biguint_bitxor() {
     BigUint second = biguint_new_with_limbs(4, {2919980651337220095ULL, 14019525496019259228ULL, 10995116277ULL, 1});
     BigUint expected_result =
         biguint_new_with_limbs(4, {15526763422372331520ULL, 4427218577690292387ULL, 1088516511498ULL, 0});
-    biguint_bitxor(&first, second);
+    biguint_bitxor(first, second, &first);
 
     assert_that(biguint_cmp(first, expected_result) == 0);
 }
@@ -167,7 +167,7 @@ void test_biguint_bitxor() {
 void test_biguint_bitnot() {
     BigUint first = biguint_new_with_limbs(4, {18446744073709551615ULL, 18446744073709551615ULL, 1099511627775ULL, 0});
     BigUint expected_result = biguint_new_with_limbs(4, {0, 0, 18446742974197923840ULL, 18446744073709551615ULL});
-    biguint_bitnot(&first);
+    biguint_bitnot(first, &first);
 
     assert_that(biguint_cmp(first, expected_result) == 0);
 }
@@ -176,7 +176,7 @@ void test_biguint_shl() {
     BigUint first = biguint_new_with_limbs(4, {18446744073709551615ULL, 18446744073709551615ULL, 1099511627775ULL, 0});
     int shift = 130;
     BigUint expected_result = biguint_new_with_limbs(4, {0, 0, 18446744073709551612ULL, 18446744073709551615ULL});
-    biguint_shl(&first, shift);
+    biguint_shl(first, shift, &first);
 
     assert_that(biguint_cmp(first, expected_result) == 0);
 }
@@ -185,7 +185,7 @@ void test_biguint_shr() {
     BigUint first = biguint_new_with_limbs(4, {18446744073709551615ULL, 18446744073709551615ULL, 1099511627775ULL, 0});
     int shift = 130;
     BigUint expected_result = biguint_new_with_limbs(4, {274877906943, 0, 0, 0});
-    biguint_shr(&first, shift);
+    biguint_shr(first, shift, &first);
 
     assert_that(biguint_cmp(first, expected_result) == 0);
 }

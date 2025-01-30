@@ -16,12 +16,12 @@ typedef struct {
  * @param SIZE The number of limbs (64-bit integers) for the `BigUint`.
  *
  * @note
- * You must call `biguint_free_limbs` to release the memory after use to avoid memory leaks.
+ * You must call `biguint_free` to release the memory after use to avoid memory leaks.
  *
  * @example
  * ```
  * BigUint num = biguint_new_heap(10);  // Allocate a BigUint with 10 limbs on the heap
- * biguint_free_limbs(&num);  // Don't forget to free the memory after use!
+ * biguint_free(&num);  // Don't forget to free the memory after use!
  * ```
  */
 #define biguint_new_heap(SIZE)                                                                                         \
@@ -275,365 +275,219 @@ int biguint_is_zero(BigUint a);
 int biguint_cmp(BigUint a, BigUint b);
 
 /**
- * Frees the memory allocated for the limbs of a BigUint that was allocated on the heap.
+ * Adds two BigUint values and stores the result in `out`.
  *
- * @param a Pointer to the BigUint whose limbs should be freed.
- *
- * @example
- * ```
- * BigUint num = biguint_new_heap(5);
- * biguint_free_limbs(&num);  // Free the memory after use
- * ```
- */
-void biguint_free_limbs(BigUint *a);
-
-/**
- * Adds two BigUint values and stores the result in the first operand.
- *
- * @param a Pointer to the first BigUint (result stored here).
- * @param b The second BigUint to add.
+ * @param a The first BigUint operand.
+ * @param b The second BigUint operand.
+ * @param out Pointer to store the result.
  *
  * @example
  * ```
  * BigUint a = biguint_new(1);
  * BigUint b = biguint_new(1);
- * biguint_add(&a, b);  // Add `b` to `a`
+ * BigUint result = biguint_new(1);
+ * biguint_add(a, b, &result);  // Compute `a + b` and store it in `result`
  * ```
  */
-void biguint_add(BigUint *a, BigUint b);
+void biguint_add(BigUint a, BigUint b, BigUint *out);
 
 /**
- * Subtracts the second BigUint from the first and stores the result in the first operand.
+ * Subtracts `b` from `a` and stores the result in `out`.
  *
- * @param a Pointer to the first BigUint (result stored here).
- * @param b The second BigUint to subtract.
+ * @param a The first BigUint operand.
+ * @param b The second BigUint operand.
+ * @param out Pointer to store the result.
  *
  * @example
  * ```
  * BigUint a = biguint_new(1);
  * BigUint b = biguint_new(1);
- * biguint_sub(&a, b);  // Subtract `b` from `a`
+ * BigUint result = biguint_new(1);
+ * biguint_sub(a, b, &result);  // Compute `a - b` and store it in `result`
  * ```
  */
-void biguint_sub(BigUint *a, BigUint b);
+void biguint_sub(BigUint a, BigUint b, BigUint *out);
 
 /**
- * Multiplies two BigUint values and stores the result in the first operand.
+ * Multiplies two BigUint values and stores the result in `out`.
  *
- * @param a Pointer to the first BigUint (result stored here).
- * @param b The second BigUint to multiply.
+ * @param a The first BigUint operand.
+ * @param b The second BigUint operand.
+ * @param out Pointer to store the result.
  *
  * @example
  * ```
  * BigUint a = biguint_new(1);
  * BigUint b = biguint_new(1);
- * biguint_mul(&a, b);  // Multiply `a` and `b`
+ * BigUint result = biguint_new(1);
+ * biguint_mul(a, b, &result);  // Compute `a * b` and store it in `result`
  * ```
  */
-void biguint_mul(BigUint *a, BigUint b);
+void biguint_mul(BigUint a, BigUint b, BigUint *out);
 
 /**
  * Checks for overflow when adding two BigUint values.
  *
- * @param a Pointer to the first BigUint (result stored here).
- * @param b The second BigUint to add.
+ * @param a The first BigUint operand.
+ * @param b The second BigUint operand.
+ * @param out Pointer to store the result (optional).
  * @return 1 if overflow occurs, 0 otherwise.
  *
  * @example
  * ```
  * BigUint a = biguint_new(1);
  * BigUint b = biguint_new(1);
- * int overflow = biguint_overflow_add(&a, b);  // Check if adding `a` and `b` overflows
+ * BigUint result = biguint_new(1);
+ * int overflow = biguint_overflow_add(a, b, &result);  // Check if `a + b` overflows
  * ```
  */
-int biguint_overflow_add(BigUint *a, BigUint b);
+int biguint_overflow_add(BigUint a, BigUint b, BigUint *out);
 
 /**
- * Computes the addition of a + b (mod m).
+ * Computes `(a + b) mod m` and stores the result in `out`.
  *
- * @param a Pointer to the first BigUint (result stored here).
- * @param b The second BigUint to add.
- * @param m The third BigUint defining the modulus.
+ * @param a The first BigUint operand.
+ * @param b The second BigUint operand.
+ * @param m The modulus.
+ * @param out Pointer to store the result.
  *
  * @example
  * ```
  * BigUint a = biguint_new(1);
  * BigUint b = biguint_new(1);
  * BigUint m = biguint_new(1);
- * biguint_add_mod(&a, b, m);
+ * BigUint result = biguint_new(1);
+ * biguint_add_mod(a, b, m, &result);  // Compute `(a + b) % m` and store in `result`
  * ```
  */
-void biguint_add_mod(BigUint *a, BigUint b, BigUint m);
+void biguint_add_mod(BigUint a, BigUint b, BigUint m, BigUint *out);
 
 /**
- * Checks for overflow when subtracting two BigUint values.
+ * Computes `(a - b) mod m` and stores the result in `out`.
  *
- * @param a Pointer to the first BigUint (result stored here).
- * @param b The second BigUint to subtract.
- * @return 1 if overflow occurs, 0 otherwise.
- *
- * @example
- * ```
- * BigUint a = biguint_new(1);
- * BigUint b = biguint_new(1);
- * int overflow = biguint_overflow_sub(&a, b);  // Check if subtracting `b` from `a` overflows
- * ```
- */
-int biguint_overflow_sub(BigUint *a, BigUint b);
-
-/**
- * Computes the substraction of a - b (mod m).
- *
- * @param a Pointer to the first BigUint (result stored here).
- * @param b The second BigUint to substract.
- * @param m The third BigUint defining the modulus.
+ * @param a The first BigUint operand.
+ * @param b The second BigUint operand.
+ * @param m The modulus.
+ * @param out Pointer to store the result.
  *
  * @example
  * ```
  * BigUint a = biguint_new(1);
  * BigUint b = biguint_new(1);
  * BigUint m = biguint_new(1);
- * biguint_sub_mod(&a, b, m);
+ * BigUint result = biguint_new(1);
+ * biguint_sub_mod(a, b, m, &result);  // Compute `(a - b) % m` and store in `result`
  * ```
  */
-void biguint_sub_mod(BigUint *a, BigUint b, BigUint m);
+void biguint_sub_mod(BigUint a, BigUint b, BigUint m, BigUint *out);
 
 /**
- * Checks for overflow when multiplying two BigUint values.
+ * Computes `(a * b) mod m` and stores the result in `out`.
  *
- * @param a Pointer to the first BigUint (result stored here).
- * @param b The second BigUint to multiply.
- * @return 1 if overflow occurs, 0 otherwise.
- *
- * @example
- * ```
- * BigUint a = biguint_new(1);
- * BigUint b = biguint_new(1);
- * int overflow = biguint_overflow_mul(&a, b);  // Check if multiplying `a` and `b` overflows
- * ```
- */
-int biguint_overflow_mul(BigUint *a, BigUint b);
-
-/**
- * Computes the multiplication of a * b (mod m).
- *
- * @param a Pointer to the first BigUint (result stored here).
- * @param b The second BigUint to multiply.
- * @param m The third BigUint defining the modulus.
+ * @param a The first BigUint operand.
+ * @param b The second BigUint operand.
+ * @param m The modulus.
+ * @param out Pointer to store the result.
  *
  * @example
  * ```
  * BigUint a = biguint_new(1);
  * BigUint b = biguint_new(1);
  * BigUint m = biguint_new(1);
- * biguint_mul_mod(&a, b, m);
+ * BigUint result = biguint_new(1);
+ * biguint_mul_mod(a, b, m, &result);  // Compute `(a * b) % m` and store in `result`
  * ```
  */
-void biguint_mul_mod(BigUint *a, BigUint b, BigUint m);
+void biguint_mul_mod(BigUint a, BigUint b, BigUint m, BigUint *out);
 
 /**
- * Computes the power of a BigUint to an exponent and checks for overflow.
+ * Computes `a^exponent` and stores the result in `out`.
  *
- * @param a Pointer to the base (BigUint).
- * @param exponent The exponent (BigUint).
- * @return Returns 1 if the operation overflows, 0 otherwise.
- *
- * @example
- * ```
- * BigUint base = biguint_new(2);
- * BigUint exponent = biguint_new(1000);
- * int has_overflowed = biguint_overflow_pow(&base, exponent);
- * ```
- */
-int biguint_overflow_pow(BigUint *a, BigUint exponent);
-
-/**
- * Computes the power of a BigUint raised to an exponent.
- *
- * @param a Pointer to the base (BigUint). The result is stored in this variable.
- * @param exponent The exponent (BigUint).
+ * @param a The base BigUint.
+ * @param exponent The exponent BigUint.
+ * @param out Pointer to store the result.
  *
  * @example
  * ```
  * BigUint base = biguint_new(2);
  * BigUint exponent = biguint_new(10);
- * biguint_pow(&base, exponent);  // `base` is now 1024
+ * BigUint result = biguint_new(1);
+ * biguint_pow(base, exponent, &result);  // Compute `2^10` and store in `result`
  * ```
  */
-void biguint_pow(BigUint *a, BigUint exponent);
+void biguint_pow(BigUint a, BigUint exponent, BigUint *out);
 
 /**
- * Computes the power of a BigUint keeping the result in bounds over a mod m
+ * Computes `(a^exponent) mod m` and stores the result in `out`.
  *
- * @param a Pointer to the base (BigUint). The result is stored in this variable.
- * @param m The modulus (BigUint). The result is computed modulo this value.
- * @param exponent The exponent (BigUint). The base `a` is raised to this power.
+ * @param a The base BigUint.
+ * @param exponent The exponent BigUint.
+ * @param m The modulus.
+ * @param out Pointer to store the result.
  *
  * @example
  * ```
  * BigUint base = biguint_new(2);
+ * BigUint exponent = biguint_new(10);
  * BigUint modulus = biguint_new(1000);
- * BigUint exponent = biguint_new(10);
- * biguint_pow_mod(&base, modulus, exponent);  // `base` is now (2^10) % 1000 = 24
+ * BigUint result = biguint_new(1);
+ * biguint_pow_mod(base, exponent, modulus, &result);  // Compute `(2^10) % 1000`
  * ```
  */
-void biguint_pow_mod(BigUint *a, BigUint exponent, BigUint m);
+void biguint_pow_mod(BigUint a, BigUint exponent, BigUint m, BigUint *out);
 
 /**
- * Divides one BigUint by another, storing the quotient and remainder.
+ * Computes bitwise AND between `a` and `b` and stores the result in `out`.
  *
- * @param a The dividend (BigUint).
- * @param b The divisor (BigUint).
- * @param quot Pointer to store the quotient.
- * @param rem Pointer to store the remainder.
- *
- * @example
- * ```
- * BigUint a = biguint_new(2);
- * BigUint b = biguint_new(2);
- * BigUint quot, rem;
- * biguint_divmod(a, b, &quot, &rem);  // Divide `a` by `b` and store the quotient and remainder
- * ```
+ * @param a The first BigUint operand.
+ * @param b The second BigUint operand.
+ * @param out Pointer to store the result.
  */
-void biguint_divmod(BigUint a, BigUint b, BigUint *quot, BigUint *rem);
+void biguint_bitand(BigUint a, BigUint b, BigUint *out);
 
 /**
- * Computes the quotient of one BigUint divided by another.
+ * Computes bitwise OR between `a` and `b` and stores the result in `out`.
  *
- * @param a The dividend (BigUint).
- * @param b The divisor (BigUint).
- * @param out Pointer to store the quotient.
- *
- * @example
- * ```
- * BigUint a = biguint_new(10);
- * BigUint b = biguint_new(2);
- * BigUint quot;
- * biguint_div(a, b, &quot);  // Quotient `quot` will be 5
- * ```
+ * @param a The first BigUint operand.
+ * @param b The second BigUint operand.
+ * @param out Pointer to store the result.
  */
-void biguint_div(BigUint a, BigUint b, BigUint *out);
+void biguint_bitor(BigUint a, BigUint b, BigUint *out);
 
 /**
- * Computes the remainder of one BigUint divided by another.
+ * Computes bitwise XOR between `a` and `b` and stores the result in `out`.
  *
- * @param a The dividend (BigUint).
- * @param b The divisor (BigUint).
- * @param out Pointer to store the remainder.
- *
- * @example
- * ```
- * BigUint a = biguint_new(10);
- * BigUint b = biguint_new(3);
- * BigUint rem;
- * biguint_mod(a, b, &rem);  // Remainder `rem` will be 1
- * ```
+ * @param a The first BigUint operand.
+ * @param b The second BigUint operand.
+ * @param out Pointer to store the result.
  */
-void biguint_mod(BigUint a, BigUint b, BigUint *out);
+void biguint_bitxor(BigUint a, BigUint b, BigUint *out);
 
 /**
- * Checks if a BigUint is even.
+ * Computes bitwise NOT of `a` and stores the result in `out`.
  *
- * @param a The BigUint to check.
- * @return Returns 1 if `a` is even, 0 otherwise.
- *
- * @example
- * ```
- * BigUint num = biguint_new(10);
- * if (biguint_is_even(num)) {
- *     printf("The number is even.\n");
- * } else {
- *     printf("The number is odd.\n");
- * }
- * ```
+ * @param a The BigUint operand.
+ * @param out Pointer to store the result.
  */
-int biguint_is_even(BigUint a);
+void biguint_bitnot(BigUint a, BigUint *out);
 
 /**
- * Performs a bitwise AND between two BigUint values.
+ * Performs a right shift on `a` and stores the result in `out`.
  *
- * @param a Pointer to the first BigUint (result stored here).
- * @param b The second BigUint to perform AND with.
- *
- * @example
- * ```
- * BigUint a = biguint_new(1);
- * BigUint b = biguint_new(1);
- * biguint_bitand(&a, b);  // Perform bitwise AND between `a` and `b`
- * ```
- */
-void biguint_bitand(BigUint *a, BigUint b);
-
-/**
- * Performs a bitwise OR between two BigUint values.
- *
- * @param a Pointer to the first BigUint (result stored here).
- * @param b The second BigUint to perform OR with.
- *
- * @example
- * ```
- * BigUint a = biguint_new(1);
- * BigUint b = biguint_new(1);
- * biguint_bitor(&a, b);  // Perform bitwise OR between `a` and `b`
- * ```
- */
-void biguint_bitor(BigUint *a, BigUint b);
-
-/**
- * Performs a bitwise XOR between two BigUint values.
- *
- * @param a Pointer to the first BigUint (result stored here).
- * @param b The second BigUint to perform XOR with.
- *
- * @example
- * ```
- * BigUint a = biguint_new(1);
- * BigUint b = biguint_new(1);
- * biguint_bitxor(&a, b);  // Perform bitwise XOR between `a` and `b`
- * ```
- */
-void biguint_bitxor(BigUint *a, BigUint b);
-
-/**
- * Performs a bitwise NOT on a BigUint value.
- *
- * @param a Pointer to the BigUint to perform NOT on.
- *
- * @example
- * ```
- * BigUint a = biguint_new(1);
- * biguint_bitnot(&a);  // Perform bitwise NOT on `a`
- * ```
- */
-void biguint_bitnot(BigUint *a);
-
-/**
- * Performs a right shift (logical shift) on a BigUint value.
- *
- * @param a Pointer to the BigUint to shift.
+ * @param a The BigUint operand.
  * @param shift The number of positions to shift.
- *
- * @example
- * ```
- * BigUint a = biguint_new(1);
- * biguint_shr(&a, 2);  // Perform a logical right shift by 2 positions
- * ```
+ * @param out Pointer to store the result.
  */
-void biguint_shr(BigUint *a, int shift);
+void biguint_shr(BigUint a, int shift, BigUint *out);
 
 /**
- * Performs a left shift on a BigUint value.
+ * Performs a left shift on `a` and stores the result in `out`.
  *
- * @param b Pointer to the BigUint to shift.
+ * @param a The BigUint operand.
  * @param shift The number of positions to shift.
- *
- * @example
- * ```
- * BigUint a = biguint_new(1);
- * biguint_shl(&a, 2);  // Perform a left shift by 2 positions
- * ```
+ * @param out Pointer to store the result.
  */
-void biguint_shl(BigUint *b, int shift);
+void biguint_shl(BigUint a, int shift, BigUint *out);
 
 /**
  * Debugging: Prints a raw representation of a BigUint value (binary).

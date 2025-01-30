@@ -2,6 +2,28 @@
 #include <biguint.h>
 #include <string.h>
 
+int get_min_size(BigUint a, BigUint b) {
+    if (a.size < b.size)
+
+        return a.size;
+    else
+        return b.size;
+}
+
+int get_min_size_three(BigUint a, BigUint b, BigUint c) {
+    int limit;
+    if (a.size < b.size)
+
+        limit = a.size;
+    else
+        limit = b.size;
+
+    if (c.size < limit)
+        limit = c.size;
+
+    return limit;
+}
+
 void biguint_free_limbs(BigUint *a) {
     if (!a)
         return;
@@ -45,18 +67,17 @@ void biguint_from_dec_string(char *str, BigUint *out) {
 
     BigUint ten = biguint_new_heap(out->size);
     biguint_from_u64(10, &ten);
+    BigUint digit_big = biguint_new_heap(out->size);
 
     int len = strlen(str);
     for (int i = 0; i < len; i++) {
         uint64_t digit = str[i] - '0';
-        BigUint digit_big = biguint_new_heap(out->size);
         biguint_from_u64(digit, &digit_big);
-        biguint_mul(out, ten);
-        biguint_add(out, digit_big);
-        biguint_free_limbs(&digit_big);
+        biguint_mul(*out, ten, out);
+        biguint_add(*out, digit_big, out);
     }
 
-    biguint_free_limbs(&ten);
+    biguint_free(&ten, &digit_big);
 };
 
 void biguint_from_bytes_big_endian(uint8_t *bytes, BigUint *out) {
@@ -135,10 +156,7 @@ char *biguint_to_dec_string(BigUint a) {
     }
     dst[k - 1] = '\0';
 
-    biguint_free_limbs(&ten);
-    biguint_free_limbs(&dividend);
-    biguint_free_limbs(&quot);
-    biguint_free_limbs(&rem);
+    biguint_free(&ten, &dividend, &quot, &rem);
     free(result);
     return dst;
 };
@@ -178,46 +196,55 @@ int biguint_is_zero(BigUint a) {
 /**
  * Operations
  */
-int biguint_overflow_add(BigUint *a, BigUint b) {
+int biguint_overflow_add(BigUint a, BigUint b, BigUint *out) {
     uint64_t carry = 0;
-    for (int i = 0; i < a->size; i++) {
-        u64_overflow_op addition = u64_overflow_add(a->limbs[i], b.limbs[i]);
+    int limit = get_min_size_three(a, b, *out);
+
+    for (int i = 0; i < limit; i++) {
+        u64_overflow_op addition = u64_overflow_add(a.limbs[i], b.limbs[i]);
         u64_overflow_op carry_addition = u64_overflow_add(addition.res, carry);
-        a->limbs[i] = carry_addition.res;
+        out->limbs[i] = carry_addition.res;
         carry = addition.overflow + carry_addition.overflow;
     }
     return carry > 0;
 };
 
-void biguint_add_mod(BigUint *a, BigUint b, BigUint m) {
-    biguint_add(a, b);
-    biguint_mod(*a, m, a);
+void biguint_add(BigUint a, BigUint b, BigUint *out) { biguint_overflow_add(a, b, out); }
+
+void biguint_add_mod(BigUint a, BigUint b, BigUint m, BigUint *out) {
+    biguint_add(a, b, out);
+    biguint_mod(*out, m, out);
 }
 
-int biguint_overflow_sub(BigUint *a, BigUint b) {
+int biguint_overflow_sub(BigUint a, BigUint b, BigUint *out) {
     uint64_t carry = 0;
-    for (int i = 0; i < a->size; i++) {
-        u64_overflow_op sub = u64_overflow_sub(a->limbs[i], b.limbs[i]);
+    int limit = get_min_size_three(a, b, *out);
+
+    for (int i = 0; i < limit; i++) {
+        u64_overflow_op sub = u64_overflow_sub(a.limbs[i], b.limbs[i]);
         u64_overflow_op carry_sub = u64_overflow_sub(sub.res, carry);
-        a->limbs[i] = carry_sub.res;
+        out->limbs[i] = carry_sub.res;
         carry = sub.overflow + carry_sub.overflow;
     }
     return carry > 0;
 };
 
-void biguint_sub_mod(BigUint *a, BigUint b, BigUint m) {
-    biguint_sub(a, b);
-    biguint_mod(*a, m, a);
+void biguint_sub(BigUint a, BigUint b, BigUint *out) { biguint_overflow_sub(a, b, out); }
+
+void biguint_sub_mod(BigUint a, BigUint b, BigUint m, BigUint *out) {
+    biguint_sub(a, b, out);
+    biguint_mod(*out, m, out);
 }
 
-int biguint_overflow_mul(BigUint *a, BigUint b) {
-    uint64_t result[a->size * 2];
-    for (int i = 0; i < a->size * 2; i++)
+int biguint_overflow_mul(BigUint a, BigUint b, BigUint *out) {
+    int limit = get_min_size_three(a, b, *out);
+    uint64_t result[limit * 2];
+    for (int i = 0; i < limit * 2; i++)
         result[i] = 0;
-    for (int i = 0; i < a->size; i++) {
+    for (int i = 0; i < limit; i++) {
         uint64_t carry = 0;
-        for (int j = 0; j < a->size; j++) { /* calculate result */
-            u64_mul_op mul = u64_mul(a->limbs[j], b.limbs[i]);
+        for (int j = 0; j < limit; j++) { /* calculate result */
+            u64_mul_op mul = u64_mul(a.limbs[j], b.limbs[i]);
             uint64_t current = result[i + j];
             u64_overflow_op addition = u64_overflow_add(mul.res, current);
             result[i + j] = addition.res; /* calculate carry */
@@ -229,73 +256,73 @@ int biguint_overflow_mul(BigUint *a, BigUint b) {
         }
     }
     int overflow = 0;
-    for (int i = 4; i < a->size * 2; i++) {
+    for (int i = 4; i < limit * 2; i++) {
         if (result[i] != 0) {
             overflow = 1;
             break;
         }
     }
-    for (int i = 0; i < a->size; i++)
-        a->limbs[i] = result[i];
+    for (int i = 0; i < limit; i++)
+        out->limbs[i] = result[i];
 
     return overflow;
 };
 
-void biguint_mul_mod(BigUint *a, BigUint b, BigUint m) {
+void biguint_mul(BigUint a, BigUint b, BigUint *out) { biguint_overflow_mul(a, b, out); }
+
+void biguint_mul_mod(BigUint a, BigUint b, BigUint m, BigUint *out) {
+    int limit = get_min_size_three(a, b, *out);
     // allocate twice the memory to prevent overflow
-    BigUint x = biguint_new_heap(a->size * 2);
-    BigUint y = biguint_new_heap(b.size * 2);
-    BigUint mod = biguint_new_heap(b.size * 2);
-    biguint_cpy(&x, *a);
-    biguint_cpy(&y, b);
-    biguint_cpy(&mod, m);
+    BigUint result = biguint_new_heap(limit * 2);
 
-    biguint_mul(&x, y);
-    biguint_mod(x, mod, &x);
-    biguint_cpy(a, x);
+    biguint_mul(a, b, &result);
+    biguint_mod(result, m, out);
 
-    biguint_free(&x, &y, &mod);
+    biguint_free(&result);
 }
 
 // https://en.wikipedia.org/wiki/Exponentiation_by_squaring
-int biguint_overflow_pow(BigUint *a, BigUint exponent) {
+int biguint_overflow_pow(BigUint a, BigUint exponent, BigUint *out) {
     if (biguint_is_zero(exponent)) {
-        biguint_one(a);
+        biguint_one(out);
         return 0;
     }
 
     int overflow = 0;
-    BigUint one = biguint_new_heap(a->size);
+    BigUint one = biguint_new_heap(a.size);
     BigUint exp = biguint_new_heap(exponent.size);
-    BigUint y = biguint_new_heap(a->size);
+    BigUint y = biguint_new_heap(a.size);
     biguint_one(&y);
     biguint_one(&one);
     biguint_cpy(&exp, exponent);
+    biguint_cpy(out, a);
 
     while (biguint_cmp(exp, one) > 0) {
         if (biguint_is_even(exp)) {
-            overflow |= biguint_overflow_mul(a, *a);
-            biguint_shr(&exp, 1);
+            overflow |= biguint_overflow_mul(*out, *out, out);
+            biguint_shr(exp, 1, &exp);
         } else {
-            overflow |= biguint_overflow_mul(&y, *a);
-            overflow |= biguint_overflow_mul(a, *a);
-            biguint_sub(&exp, one);
-            biguint_shr(&exp, 1);
+            overflow |= biguint_overflow_mul(y, *out, &y);
+            overflow |= biguint_overflow_mul(*out, *out, out);
+            biguint_sub(exp, one, &exp);
+            biguint_shr(exp, 1, &exp);
         }
     }
 
-    overflow |= biguint_overflow_mul(a, y);
+    overflow |= biguint_overflow_mul(*out, y, out);
 
     biguint_free(&one, &exp, &y);
     return overflow;
 }
 
+void biguint_pow(BigUint a, BigUint exponent, BigUint *out) { biguint_overflow_pow(a, exponent, out); }
+
 // performs a pow operation keeping the result in bounds over a mod m, using the following identity:
 // (a ⋅ b) mod m = [(a mod m) ⋅ (b mod m)] mod m
 // https://en.wikipedia.org/wiki/Modular_exponentiation
-void biguint_pow_mod(BigUint *a, BigUint exponent, BigUint m) {
+void biguint_pow_mod(BigUint a, BigUint exponent, BigUint m, BigUint *out) {
     if (biguint_is_zero(exponent)) {
-        biguint_one(a);
+        biguint_one(out);
         return;
     }
 
@@ -305,13 +332,13 @@ void biguint_pow_mod(BigUint *a, BigUint exponent, BigUint m) {
     //
     // note that we could use mul_mod but this way we avoid
     // allocating and freeing memory on the heap every iteration as mul_mod does it for use
-    BigUint base = biguint_new_heap(a->size * 2);
-    BigUint mod = biguint_new_heap(a->size * 2);
-    BigUint one = biguint_new_heap(a->size * 2);
+    BigUint base = biguint_new_heap(a.size * 2);
+    BigUint mod = biguint_new_heap(a.size * 2);
+    BigUint one = biguint_new_heap(a.size * 2);
     BigUint exp = biguint_new_heap(exponent.size * 2);
-    BigUint y = biguint_new_heap(a->size * 2);
+    BigUint y = biguint_new_heap(a.size * 2);
     biguint_one(&y);
-    biguint_cpy(&base, *a);
+    biguint_cpy(&base, a);
     biguint_cpy(&mod, m);
     biguint_one(&one);
     biguint_cpy(&exp, exponent);
@@ -319,95 +346,93 @@ void biguint_pow_mod(BigUint *a, BigUint exponent, BigUint m) {
     biguint_mod(base, mod, &base);
     while (biguint_cmp(exp, one) > 0) {
         if (biguint_is_even(exp)) {
-            biguint_mul(&base, base);
+            biguint_mul(base, base, &base);
             biguint_mod(base, mod, &base);
-            biguint_shr(&exp, 1);
+            biguint_shr(exp, 1, &exp);
         } else {
-            biguint_mul(&y, base);
+            biguint_mul(y, base, &y);
             biguint_mod(y, mod, &y);
-            biguint_mul(&base, base);
+            biguint_mul(base, base, &base);
             biguint_mod(base, mod, &base);
-            biguint_sub(&exp, one);
-            biguint_shr(&exp, 1);
+            biguint_sub(exp, one, &exp);
+            biguint_shr(exp, 1, &exp);
         }
     }
 
-    biguint_mul(&base, y);
+    biguint_mul(base, y, &base);
     biguint_mod(base, mod, &base);
 
-    biguint_cpy(a, base);
+    biguint_cpy(out, base);
 
     biguint_free(&base, &mod, &one, &exp, &y);
 }
 
-void biguint_add(BigUint *a, BigUint b) { biguint_overflow_add(a, b); }
-
-void biguint_sub(BigUint *a, BigUint b) { biguint_overflow_sub(a, b); }
-
-void biguint_mul(BigUint *a, BigUint b) { biguint_overflow_mul(a, b); }
-
-void biguint_pow(BigUint *a, BigUint exponent) { biguint_overflow_pow(a, exponent); }
-
-void biguint_bitand(BigUint *a, BigUint b) {
-    for (int i = 0; i < a->size; i++)
-        a->limbs[i] = a->limbs[i] & b.limbs[i];
+void biguint_bitand(BigUint a, BigUint b, BigUint *out) {
+    int limit = get_min_size_three(a, b, *out);
+    for (int i = 0; i < limit; i++)
+        out->limbs[i] = a.limbs[i] & b.limbs[i];
 }
 
-void biguint_bitor(BigUint *a, BigUint b) {
-    for (int i = 0; i < a->size; i++)
-        a->limbs[i] = a->limbs[i] | b.limbs[i];
+void biguint_bitor(BigUint a, BigUint b, BigUint *out) {
+    int limit = get_min_size_three(a, b, *out);
+    for (int i = 0; i < limit; i++)
+        out->limbs[i] = a.limbs[i] | b.limbs[i];
 }
 
-void biguint_bitxor(BigUint *a, BigUint b) {
-    for (int i = 0; i < a->size; i++)
-        a->limbs[i] = a->limbs[i] ^ b.limbs[i];
+void biguint_bitxor(BigUint a, BigUint b, BigUint *out) {
+    int limit = get_min_size(a, b);
+    for (int i = 0; i < limit; i++)
+        out->limbs[i] = a.limbs[i] ^ b.limbs[i];
 }
 
-void biguint_bitnot(BigUint *a) {
-    for (int i = 0; i < a->size; i++)
-        a->limbs[i] = ~a->limbs[i];
+void biguint_bitnot(BigUint a, BigUint *out) {
+    int limit = get_min_size(a, *out);
+    for (int i = 0; i < limit; i++)
+        out->limbs[i] = ~a.limbs[i];
 }
 
-void biguint_shl(BigUint *a, int shift) {
+void biguint_shl(BigUint a, int shift, BigUint *out) {
     int shift_start = shift / 64;
     int shift_mod = shift % 64;
-    BigUint cpy = biguint_new_heap(a->size);
-    biguint_cpy(&cpy, *a);
-    biguint_zero(a);
+    BigUint cpy = biguint_new_heap(a.size);
+    biguint_cpy(&cpy, a);
+    biguint_zero(out);
+    int limit = get_min_size(a, *out);
 
-    for (int i = shift_start; i < a->size; i++) {
-        a->limbs[i] = cpy.limbs[i - shift_start] << shift_mod;
+    for (int i = shift_start; i < limit; i++) {
+        out->limbs[i] = cpy.limbs[i - shift_start] << shift_mod;
     }
 
     /* calculate carry */
     if (shift_mod > 0) {
-        for (int i = shift_start + 1; i < a->size; i++) {
-            a->limbs[i] += cpy.limbs[i - shift_start - 1] >> (64 - shift_mod);
+        for (int i = shift_start + 1; i < limit; i++) {
+            out->limbs[i] += cpy.limbs[i - shift_start - 1] >> (64 - shift_mod);
         }
     }
 
-    biguint_free_limbs(&cpy);
+    biguint_free(&cpy);
 }
 
-void biguint_shr(BigUint *a, int shift) {
+void biguint_shr(BigUint a, int shift, BigUint *out) {
     int shift_start = shift / 64;
     int shift_mod = shift % 64;
-    BigUint cpy = biguint_new_heap(a->size);
-    biguint_cpy(&cpy, *a);
-    biguint_zero(a);
+    BigUint cpy = biguint_new_heap(a.size);
+    biguint_cpy(&cpy, a);
+    biguint_zero(out);
+    int limit = get_min_size(a, *out);
 
-    for (int i = shift_start; i < a->size; i++) {
-        a->limbs[i - shift_start] = cpy.limbs[i] >> shift_mod;
+    for (int i = shift_start; i < limit; i++) {
+        out->limbs[i - shift_start] = cpy.limbs[i] >> shift_mod;
     }
 
     /* calculate carry */
     if (shift_mod > 0) {
-        for (int i = shift_start + 1; i < a->size; i++) {
-            a->limbs[i - shift_start - 1] += cpy.limbs[i] << (64 - shift_mod);
+        for (int i = shift_start + 1; i < limit; i++) {
+            out->limbs[i - shift_start - 1] += cpy.limbs[i] << (64 - shift_mod);
         }
     }
 
-    biguint_free_limbs(&cpy);
+    biguint_free(&cpy);
 }
 
 void biguint_divmod(BigUint a, BigUint b, BigUint *quot, BigUint *rem) {
@@ -424,32 +449,32 @@ void biguint_divmod(BigUint a, BigUint b, BigUint *quot, BigUint *rem) {
     int shift = a_bits - b_bits;
     BigUint shift_copy = biguint_new_heap(b.size);
     biguint_cpy(&shift_copy, b);
-    biguint_shl(&shift_copy, shift);
+    biguint_shl(shift_copy, shift, &shift_copy);
     while (1) {
         /* rem >= shift_copy */
         if (biguint_cmp(*rem, shift_copy) >= 0) {
             quot->limbs[shift / 64] |= ((uint64_t)1 << (uint64_t)(shift % 64));
-            biguint_sub(rem, shift_copy);
+            biguint_sub(*rem, shift_copy, rem);
         }
         if (shift == 0)
             break;
         shift -= 1;
-        biguint_shr(&shift_copy, 1);
+        biguint_shr(shift_copy, 1, &shift_copy);
     }
 
-    biguint_free_limbs(&shift_copy);
+    biguint_free(&shift_copy);
 }
 
 void biguint_div(BigUint a, BigUint b, BigUint *out) {
     BigUint rem = biguint_new_heap(out->size);
     biguint_divmod(a, b, out, &rem);
-    biguint_free_limbs(&rem);
+    biguint_free(&rem);
 }
 
 void biguint_mod(BigUint a, BigUint b, BigUint *out) {
     BigUint quot = biguint_new_heap(out->size);
     biguint_divmod(a, b, &quot, out);
-    biguint_free_limbs(&quot);
+    biguint_free(&quot);
 }
 
 int biguint_is_even(BigUint a) { return (a.limbs[0] & 1) == 0; }
