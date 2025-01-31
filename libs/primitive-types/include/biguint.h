@@ -44,6 +44,8 @@ typedef struct {
     for (size_t i = 0; i < sizeof(ANONYMOUS_VARIABLE(args)) / sizeof(ANONYMOUS_VARIABLE(args)[0]); i++)                \
         biguint_free_limbs(ANONYMOUS_VARIABLE(args)[i]);
 
+void biguint_free_limbs(BigUint *a);
+
 /**
  * Creates a `BigUint` on the stack with a specified number of limbs, all initialized to 0.
  *
@@ -399,6 +401,76 @@ void biguint_sub_mod(BigUint a, BigUint b, BigUint m, BigUint *out);
  * ```
  */
 void biguint_mul_mod(BigUint a, BigUint b, BigUint m, BigUint *out);
+
+/**
+ * Divides one BigUint by another, storing the quotient and remainder.
+ *
+ * @param a The dividend (BigUint).
+ * @param b The divisor (BigUint).
+ * @param quot Pointer to store the quotient.
+ * @param rem Pointer to store the remainder.
+ *
+ * @example
+ * ```
+ * BigUint a = biguint_new(2);
+ * BigUint b = biguint_new(2);
+ * BigUint quot, rem;
+ * biguint_divmod(a, b, &quot, &rem);  // Divide `a` by `b` and store the quotient and remainder
+ * ```
+ */
+void biguint_divmod(BigUint a, BigUint b, BigUint *quot, BigUint *rem);
+
+/**
+ * Computes the quotient of one BigUint divided by another.
+ *
+ * @param a The dividend (BigUint).
+ * @param b The divisor (BigUint).
+ * @param out Pointer to store the quotient.
+ *
+ * @example
+ * ```
+ * BigUint a = biguint_new(10);
+ * BigUint b = biguint_new(2);
+ * BigUint quot;
+ * biguint_div(a, b, &quot);  // Quotient `quot` will be 5
+ * ```
+ */
+void biguint_div(BigUint a, BigUint b, BigUint *out);
+
+/**
+ * Computes the remainder of one BigUint divided by another.
+ *
+ * @param a The dividend (BigUint).
+ * @param b The divisor (BigUint).
+ * @param out Pointer to store the remainder.
+ *
+ * @example
+ * ```
+ * BigUint a = biguint_new(10);
+ * BigUint b = biguint_new(3);
+ * BigUint rem;
+ * biguint_mod(a, b, &rem);  // Remainder `rem` will be 1
+ * ```
+ */
+void biguint_mod(BigUint a, BigUint b, BigUint *out);
+
+/**
+ * Checks if a BigUint is even.
+ *
+ * @param a The BigUint to check.
+ * @return Returns 1 if `a` is even, 0 otherwise.
+ *
+ * @example
+ * ```
+ * BigUint num = biguint_new(10);
+ * if (biguint_is_even(num)) {
+ *     printf("The number is even.\n");
+ * } else {
+ *     printf("The number is odd.\n");
+ * }
+ * ```
+ */
+int biguint_is_even(BigUint a);
 
 /**
  * Computes `a^exponent` and stores the result in `out`.
