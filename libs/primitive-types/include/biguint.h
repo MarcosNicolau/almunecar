@@ -277,57 +277,6 @@ int biguint_is_zero(BigUint a);
 int biguint_cmp(BigUint a, BigUint b);
 
 /**
- * Adds two BigUint values and stores the result in `out`.
- *
- * @param a The first BigUint operand.
- * @param b The second BigUint operand.
- * @param out Pointer to store the result.
- *
- * @example
- * ```
- * BigUint a = biguint_new(1);
- * BigUint b = biguint_new(1);
- * BigUint result = biguint_new(1);
- * biguint_add(a, b, &result);  // Compute `a + b` and store it in `result`
- * ```
- */
-void biguint_add(BigUint a, BigUint b, BigUint *out);
-
-/**
- * Subtracts `b` from `a` and stores the result in `out`.
- *
- * @param a The first BigUint operand.
- * @param b The second BigUint operand.
- * @param out Pointer to store the result.
- *
- * @example
- * ```
- * BigUint a = biguint_new(1);
- * BigUint b = biguint_new(1);
- * BigUint result = biguint_new(1);
- * biguint_sub(a, b, &result);  // Compute `a - b` and store it in `result`
- * ```
- */
-void biguint_sub(BigUint a, BigUint b, BigUint *out);
-
-/**
- * Multiplies two BigUint values and stores the result in `out`.
- *
- * @param a The first BigUint operand.
- * @param b The second BigUint operand.
- * @param out Pointer to store the result.
- *
- * @example
- * ```
- * BigUint a = biguint_new(1);
- * BigUint b = biguint_new(1);
- * BigUint result = biguint_new(1);
- * biguint_mul(a, b, &result);  // Compute `a * b` and store it in `result`
- * ```
- */
-void biguint_mul(BigUint a, BigUint b, BigUint *out);
-
-/**
  * Checks for overflow when adding two BigUint values.
  *
  * @param a The first BigUint operand.
@@ -344,6 +293,23 @@ void biguint_mul(BigUint a, BigUint b, BigUint *out);
  * ```
  */
 int biguint_overflow_add(BigUint a, BigUint b, BigUint *out);
+
+/**
+ * Adds two BigUint values and stores the result in `out`.
+ *
+ * @param a The first BigUint operand.
+ * @param b The second BigUint operand.
+ * @param out Pointer to store the result.
+ *
+ * @example
+ * ```
+ * BigUint a = biguint_new(1);
+ * BigUint b = biguint_new(1);
+ * BigUint result = biguint_new(1);
+ * biguint_add(a, b, &result);  // Compute `a + b` and store it in `result`
+ * ```
+ */
+void biguint_add(BigUint a, BigUint b, BigUint *out);
 
 /**
  * Computes `(a + b) mod m` and stores the result in `out`.
@@ -365,6 +331,41 @@ int biguint_overflow_add(BigUint a, BigUint b, BigUint *out);
 void biguint_add_mod(BigUint a, BigUint b, BigUint m, BigUint *out);
 
 /**
+ * Checks for overflow when adding two BigUint values.
+ *
+ * @param a The first BigUint operand.
+ * @param b The second BigUint operand.
+ * @param out Pointer to store the result (optional).
+ * @return 1 if overflow occurs, 0 otherwise.
+ *
+ * @example
+ * ```
+ * BigUint a = biguint_new(1);
+ * BigUint b = biguint_new(1);
+ * BigUint result = biguint_new(1);
+ * int overflow = biguint_overflow_sub(a, b, &result);  // Check if `a - b` overflows
+ * ```
+ */
+int biguint_overflow_sub(BigUint a, BigUint b, BigUint *out);
+
+/**
+ * Subtracts `b` from `a` and stores the result in `out`.
+ *
+ * @param a The first BigUint operand.
+ * @param b The second BigUint operand.
+ * @param out Pointer to store the result.
+ *
+ * @example
+ * ```
+ * BigUint a = biguint_new(1);
+ * BigUint b = biguint_new(1);
+ * BigUint result = biguint_new(1);
+ * biguint_sub(a, b, &result);  // Compute `a - b` and store it in `result`
+ * ```
+ */
+void biguint_sub(BigUint a, BigUint b, BigUint *out);
+
+/**
  * Computes `(a - b) mod m` and stores the result in `out`.
  *
  * @param a The first BigUint operand.
@@ -382,6 +383,41 @@ void biguint_add_mod(BigUint a, BigUint b, BigUint m, BigUint *out);
  * ```
  */
 void biguint_sub_mod(BigUint a, BigUint b, BigUint m, BigUint *out);
+
+/**
+ * Multiplies two BigUint values and stores the result in `out`.
+ *
+ * @param a The first BigUint operand.
+ * @param b The second BigUint operand.
+ * @param out Pointer to store the result.
+ * @return 1 if overflow occurs, 0 otherwise.
+ *
+ * @example
+ * ```
+ * BigUint a = biguint_new(1);
+ * BigUint b = biguint_new(1);
+ * BigUint result = biguint_new(1);
+ * int overflow = biguint_overflow_mul(a, b, &result); // Check if `a * b` overflows
+ * ```
+ */
+int biguint_overflow_mul(BigUint a, BigUint b, BigUint *out);
+
+/**
+ * Multiplies two BigUint values and stores the result in `out`.
+ *
+ * @param a The first BigUint operand.
+ * @param b The second BigUint operand.
+ * @param out Pointer to store the result.
+ *
+ * @example
+ * ```
+ * BigUint a = biguint_new(1);
+ * BigUint b = biguint_new(1);
+ * BigUint result = biguint_new(1);
+ * biguint_mul(a, b, &result);  // Compute `a * b` and store it in `result`
+ * ```
+ */
+void biguint_mul(BigUint a, BigUint b, BigUint *out);
 
 /**
  * Computes `(a * b) mod m` and stores the result in `out`.
@@ -471,6 +507,24 @@ void biguint_mod(BigUint a, BigUint b, BigUint *out);
  * ```
  */
 int biguint_is_even(BigUint a);
+
+/**
+ * Computes `a^exponent` and stores the result in `out` and checks for overflow.
+ *
+ * @param a The base BigUint.
+ * @param exponent The exponent BigUint.
+ * @param out Pointer to store the result.
+ * @return Returns 1 if the operation overflows, 0 otherwise.
+ *
+ * @example
+ * ```
+ * BigUint base = biguint_new(2);
+ * BigUint exponent = biguint_new(10);
+ * BigUint result = biguint_new(1);
+ * int biguint_overflow_pow(base, exponent, &result);  // Check if `a ^ exponent` overflows
+ * ```
+ */
+int biguint_overflow_pow(BigUint a, BigUint exponent, BigUint *out);
 
 /**
  * Computes `a^exponent` and stores the result in `out`.
