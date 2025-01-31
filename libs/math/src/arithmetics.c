@@ -29,7 +29,7 @@ void biguint_lcm(BigUint a, BigUint b, BigUint *out) {
 
     BigUint gcd = biguint_new_heap(out->size);
     biguint_gcd(x, y, &gcd);
-    biguint_mul(&x, y);
+    biguint_mul(x, y, &x);
     biguint_div(x, gcd, out);
 
     biguint_free(&gcd, &x, &y);
@@ -40,8 +40,7 @@ void biguint_lcm(BigUint a, BigUint b, BigUint *out) {
 // https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm#Modular_integers
 int biguint_bezout_identity_mod_holds(BigUint a, BigUint t, BigUint m, BigUint gcd) {
     BigUint at = biguint_new_heap(a.size);
-    biguint_cpy(&at, a);
-    biguint_mul(&at, t);
+    biguint_mul(a, t, &at);
     biguint_mod(at, m, &at);
     if (biguint_cmp(at, gcd) != 0) {
         return 0;
@@ -78,22 +77,16 @@ void biguint_extended_euclidean_algorithm(BigUint a, BigUint b, ExtendedEuclidea
         biguint_div(rp, ri, &quot);
 
         // r = r_{i-1} - q_i * r_i
-        biguint_cpy(&qr, ri);
-        biguint_mul(&qr, quot);
-        biguint_cpy(&r, rp);
-        biguint_sub(&r, qr);
+        biguint_mul(ri, quot, &qr);
+        biguint_sub(rp, qr, &r);
 
         // s = s_{i-1} - q_i * s_i
-        biguint_cpy(&qs, si);
-        biguint_mul(&qs, quot);
-        biguint_cpy(&s, sp);
-        biguint_sub(&s, qs);
+        biguint_mul(si, quot, &qs);
+        biguint_sub(sp, qs, &s);
 
         // t = t_{i-1} - q_i * t_i
-        biguint_cpy(&qt, ti);
-        biguint_mul(&qt, quot);
-        biguint_cpy(&t, tp);
-        biguint_sub(&t, qt);
+        biguint_mul(ti, quot, &qt);
+        biguint_sub(tp, qt, &t);
 
         // update values for next iteration
         biguint_cpy(&rp, ri);
@@ -130,7 +123,7 @@ void biguint_inverse_mod(BigUint a, BigUint n, BigUint *out) {
         biguint_zero(out);
     } else {
         if (alg.sk_sign == -1) {
-            biguint_add(&alg.sk, n);
+            biguint_add(alg.sk, n, &alg.sk);
         }
         biguint_cpy(out, alg.sk);
     }
