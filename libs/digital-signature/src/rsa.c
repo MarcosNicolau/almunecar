@@ -35,8 +35,7 @@ void rsa_gen_key_pair(RSAKeyPair *key_pair) {
     biguint_random_prime(&q);
 
     BigUint n = biguint_new_heap(key_size_in_bytes);
-    biguint_cpy(&n, p);
-    biguint_mul(&n, q);
+    biguint_mul(p, q, &n);
 
     // Carmichael's totient (lambda) of n outputs the smallest integer m, such that for every integer coprime to n, it
     // holds that:
@@ -47,8 +46,8 @@ void rsa_gen_key_pair(RSAKeyPair *key_pair) {
     // https://en.wikipedia.org/wiki/Carmichael_function
     BigUint one = biguint_new_heap(key_size_in_bytes);
     biguint_one(&one);
-    biguint_sub(&p, one);
-    biguint_sub(&q, one);
+    biguint_sub(p, one, &p);
+    biguint_sub(q, one, &q);
 
     BigUint lambda_n = biguint_new_heap(key_size_in_bytes);
     biguint_lcm(p, q, &lambda_n);
