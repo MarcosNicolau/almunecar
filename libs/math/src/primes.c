@@ -60,14 +60,12 @@ int biguint_is_prime_solovay_strassen(BigUint p) {
     BigUint two = biguint_new_heap(p.size);
     biguint_from_u64(2, &two);
 
-    BigUint exponent = biguint_new_heap(p.size);
-    biguint_cpy(&exponent, p);
-    biguint_sub(&exponent, one);
-    biguint_div(exponent, two, &exponent);
-
     BigUint p_minus_one = biguint_new_heap(p.size);
     biguint_cpy(&p_minus_one, p);
-    biguint_sub(&p_minus_one, one);
+    biguint_sub(p, one, &p_minus_one);
+
+    BigUint exponent = biguint_new_heap(p.size);
+    biguint_div(p_minus_one, two, &exponent);
 
     BigUint a = biguint_new_heap(p.size);
     BigUint rem = biguint_new_heap(p.size);
@@ -87,7 +85,7 @@ int biguint_is_prime_solovay_strassen(BigUint p) {
         // since we check that gcd(a, p) == 1
         // j = {-1,1} so we don't have to check if it == 0
         int j = jacobi(a, p);
-        biguint_pow_mod(&a, exponent, p);
+        biguint_pow_mod(a, exponent, p, &a);
         biguint_mod(a, p, &rem);
 
         // (p - 1) mod p = -1 mod p
@@ -152,7 +150,6 @@ int jacobi(BigUint a, BigUint n) {
 
     BigUint exponent = biguint_new_heap(a.size);
     BigUint exponent_two = biguint_new_heap(a.size);
-    BigUint exp_result = biguint_new_heap(a.size);
     BigUint next = biguint_new_heap(a.size);
 
     int result;
@@ -160,15 +157,15 @@ int jacobi(BigUint a, BigUint n) {
     if (biguint_is_even(a)) {
         biguint_cpy(&exponent, n);
         biguint_from_u64(2, &num);
-        biguint_pow(&exponent, num);
+        biguint_pow(exponent, num, &exponent);
         biguint_from_u64(1, &num);
-        biguint_sub(&exponent, num);
+        biguint_sub(exponent, num, &exponent);
         biguint_from_u64(8, &num);
-        biguint_div(exponent, num, &exp_result);
+        biguint_div(exponent, num, &exponent);
 
         // (-1)^n = { - 1 if n is even, - -1 if n is odd }
         int calc;
-        if (biguint_is_even(exp_result))
+        if (biguint_is_even(exponent))
             calc = 1;
         else
             calc = -1;
@@ -179,18 +176,18 @@ int jacobi(BigUint a, BigUint n) {
         result = calc * jacobi(next, n);
     } else {
         biguint_cpy(&exponent, a);
-        biguint_sub(&exponent, num);
+        biguint_sub(exponent, num, &exponent);
 
         biguint_cpy(&exponent_two, n);
-        biguint_sub(&exponent_two, num);
+        biguint_sub(exponent_two, num, &exponent_two);
 
-        biguint_mul(&exponent, exponent_two);
+        biguint_mul(exponent, exponent_two, &exponent);
         biguint_from_u64(4, &num);
-        biguint_div(exponent, num, &exp_result);
+        biguint_div(exponent, num, &exponent);
 
         // (-1)^n = { - 1 if n is even, - -1 if n is odd }
         int calc;
-        if (biguint_is_even(exp_result))
+        if (biguint_is_even(exponent))
             calc = 1;
         else
             calc = -1;
@@ -200,7 +197,7 @@ int jacobi(BigUint a, BigUint n) {
         result = calc * jacobi(next, a);
     }
 
-    biguint_free(&exponent, &exponent_two, &exp_result, &next, &num);
+    biguint_free(&exponent, &exponent_two, &next, &num);
 
     return result;
 }

@@ -7,7 +7,7 @@ void benchmark_add() {
     BigUint b = biguint_new(16);
     biguint_random(&a);
     biguint_random(&b);
-    biguint_add(&a, b);
+    biguint_add(a, b, &a);
 }
 
 void benchmark_sub() {
@@ -15,7 +15,7 @@ void benchmark_sub() {
     BigUint b = biguint_new(16);
     biguint_random(&a);
     biguint_random(&b);
-    biguint_sub(&a, b);
+    biguint_sub(a, b, &a);
 }
 
 void benchmark_divmod() {
@@ -33,7 +33,7 @@ void benchmark_mul() {
     BigUint b = biguint_new(16);
     biguint_random(&a);
     biguint_random(&b);
-    biguint_mul(&a, b);
+    biguint_mul(a, b, &a);
 }
 
 void benchmark_pow() {
@@ -41,7 +41,7 @@ void benchmark_pow() {
     BigUint b = biguint_new(16);
     biguint_random(&a);
     biguint_random(&b);
-    biguint_pow(&a, b);
+    biguint_pow(a, b, &a);
 }
 
 void benchmark_pow_mod() {
@@ -51,7 +51,7 @@ void benchmark_pow_mod() {
     biguint_random(&a);
     biguint_random(&b);
     biguint_random(&m);
-    biguint_pow_mod(&a, b, m);
+    biguint_pow_mod(a, b, m, &a);
 }
 
 int main() {
