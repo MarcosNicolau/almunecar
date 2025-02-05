@@ -256,13 +256,15 @@ int biguint_overflow_mul(BigUint a, BigUint b, BigUint *out) {
         }
     }
     int overflow = 0;
-    for (int i = 4; i < limit * 2; i++) {
-        if (result[i] != 0) {
-            overflow = 1;
-            break;
+    if (out->size < limit * 2) {
+        for (int i = 4; i < limit * 2 && out->size < limit * 2; i++) {
+            if (result[i] != 0) {
+                overflow = 1;
+                break;
+            }
         }
     }
-    for (int i = 0; i < limit; i++)
+    for (int i = 0; i < out->size; i++)
         out->limbs[i] = result[i];
 
     return overflow;
