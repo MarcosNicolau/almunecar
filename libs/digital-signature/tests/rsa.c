@@ -3,8 +3,8 @@
 #include <utils/test.h>
 
 void test_key_generation() {
-    const int limbs_size = 8;
-    const int size_in_bits = 8 * 64;
+#define limbs_size 8
+#define size_in_bits 8 * 64
     RSAKeyPair key_pair = rsa_key_pair_new(size_in_bits);
     rsa_gen_key_pair(&key_pair);
 
