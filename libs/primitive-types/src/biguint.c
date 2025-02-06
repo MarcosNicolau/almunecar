@@ -4,7 +4,6 @@
 
 int get_min_size(BigUint a, BigUint b) {
     if (a.size < b.size)
-
         return a.size;
     else
         return b.size;
@@ -50,15 +49,14 @@ void biguint_from_u64(uint64_t a, BigUint *out) {
 }
 
 void biguint_cpy(BigUint *dst, BigUint src) {
-    int limit = dst->size;
-    if (dst->size > src.size)
-        limit = src.size;
+    int limit = get_min_size(*dst, src);
 
     for (int i = 0; i < dst->size; i++) {
-        if (i < limit)
+        if (i < limit) {
             dst->limbs[i] = src.limbs[i];
-        else
+        } else {
             dst->limbs[i] = 0;
+        }
     }
 }
 
@@ -276,11 +274,13 @@ void biguint_mul_mod(BigUint a, BigUint b, BigUint m, BigUint *out) {
     int limit = get_min_size_three(a, b, *out);
     // allocate twice the memory to prevent overflow
     BigUint result = biguint_new_heap(limit * 2);
+    BigUint mod = biguint_new_heap(limit * 2);
+    biguint_cpy(&mod, m);
 
     biguint_mul(a, b, &result);
-    biguint_mod(result, m, out);
+    biguint_mod(result, mod, out);
 
-    biguint_free(&result);
+    biguint_free(&result, &mod);
 }
 
 // https://en.wikipedia.org/wiki/Exponentiation_by_squaring
@@ -455,7 +455,9 @@ void biguint_divmod(BigUint a, BigUint b, BigUint *quot, BigUint *rem) {
     while (1) {
         /* rem >= shift_copy */
         if (biguint_cmp(*rem, shift_copy) >= 0) {
-            quot->limbs[shift / 64] |= ((uint64_t)1 << (uint64_t)(shift % 64));
+            if (shift / 64 < quot->size) {
+                quot->limbs[shift / 64] |= ((uint64_t)1 << (uint64_t)(shift % 64));
+            }
             biguint_sub(*rem, shift_copy, rem);
         }
         if (shift == 0)
