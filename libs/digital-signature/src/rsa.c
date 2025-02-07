@@ -26,15 +26,15 @@
 // 5. finding d as the multiplicative inverse of e
 // 6. releasing the public key as n,e and the private key as n,d
 void rsa_gen_key_pair(RSAKeyPair *key_pair) {
-    int key_size_in_bytes = key_pair->bit_size / 64;
+    int key_limbs_size = key_pair->bit_size / 64;
 
     // prime numbers have to be half the size of the desired key to prevent multiplication overflows
-    BigUint p = biguint_new_heap(key_size_in_bytes / 2);
-    BigUint q = biguint_new_heap(key_size_in_bytes / 2);
+    BigUint p = biguint_new_heap(key_limbs_size / 2);
+    BigUint q = biguint_new_heap(key_limbs_size / 2);
     biguint_random_prime(&p);
     biguint_random_prime(&q);
 
-    BigUint n = biguint_new_heap(key_size_in_bytes);
+    BigUint n = biguint_new_heap(key_limbs_size);
     biguint_mul(p, q, &n);
 
     // Carmichael's totient (lambda) of n outputs the smallest integer m, such that for every integer coprime to n, it
@@ -44,12 +44,12 @@ void rsa_gen_key_pair(RSAKeyPair *key_pair) {
     // lambda(q) = q - 1 hance lambda(n) = lcm(p - 1, q - 1)
     //
     // https://en.wikipedia.org/wiki/Carmichael_function
-    BigUint one = biguint_new_heap(key_size_in_bytes);
+    BigUint one = biguint_new_heap(key_limbs_size);
     biguint_one(&one);
     biguint_sub(p, one, &p);
     biguint_sub(q, one, &q);
 
-    BigUint lambda_n = biguint_new_heap(key_size_in_bytes);
+    BigUint lambda_n = biguint_new_heap(key_limbs_size);
     biguint_lcm(p, q, &lambda_n);
 
     // Now we need to compute the private exponent d as
@@ -63,8 +63,8 @@ void rsa_gen_key_pair(RSAKeyPair *key_pair) {
     // so if we can compute x we get d.
     //
     // Using the extended euclidean algorithm we can compute both x,y obtaining d
-    BigUint e = biguint_new_heap(key_size_in_bytes);
-    BigUint d = biguint_new_heap(key_size_in_bytes);
+    BigUint e = biguint_new_heap(key_limbs_size);
+    BigUint d = biguint_new_heap(key_limbs_size);
     biguint_from_u64(e_const, &e);
     biguint_inverse_mod(e, lambda_n, &d);
 

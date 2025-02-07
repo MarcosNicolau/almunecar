@@ -29,8 +29,8 @@ void biguint_lcm(BigUint a, BigUint b, BigUint *out) {
 
     BigUint gcd = biguint_new_heap(out->size);
     biguint_gcd(x, y, &gcd);
-    biguint_mul(x, y, &x);
-    biguint_div(x, gcd, out);
+    biguint_mul(x, y, out);
+    biguint_div(*out, gcd, out);
 
     biguint_free(&gcd, &x, &y);
 }
