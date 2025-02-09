@@ -2,6 +2,18 @@
 
 static FILE *urandom_file = NULL;
 
+uint8_t u8_random() {
+    uint8_t randval;
+
+    if (urandom_file == NULL) {
+        // use urandom https://sockpuppet.org/blog/2014/02/25/safely-generate-random-numbers/
+        urandom_file = fopen("/dev/urandom", "r");
+    }
+    fread(&randval, sizeof(randval), 1, urandom_file);
+
+    return randval;
+}
+
 uint64_t u64_random() {
     uint64_t randval;
 
