@@ -15,15 +15,15 @@ Glossary:
 - 🚧: WIP
 - 📝: Planned support
 
-| Libs                                       | Desc                                   | Status |
-| ------------------------------------------ | -------------------------------------- | ------ |
-| [primitive-types](./libs/primitive-types/) | UINT & U256                            | ✅     |
-| [math](./libs/math/)                       | Utils for polynomials and modular math | 🚧     |
-| [hashes](./libs/hashes/)                   | SHA-256                                | ✅     |
-| [rsa](./libs/rsa/)                         | RSA implementation                     | 🚧     |
-| [elliptic-curves](./libs/eliptic-curves/)  | ECDSA & BLS12-381                      | 📝     |
-| [snarks](./libs/snarks/)                   | groth & plonk                          | 📝     |
-| [pcs](./libs/pcs/)                         | KZG                                    | 📝     |
+| Libs                                             | Desc                    | Status |
+| ------------------------------------------------ | ----------------------- | ------ |
+| [primitive-types](./libs/primitive-types/)       | BigUint & UINTs         | ✅     |
+| [math](./libs/math/)                             | Math theorems and utils | ✅     |
+| [hashes](./libs/hashes/)                         | SHA-256                 | ✅     |
+| [digital-signature](./libs/digital-signature/) | RSA, ECDSA              | 🚧     |
+| [elliptic-curves](./libs/elliptic-curves/)        | secp256k1, BLS12-381    | 📝     |
+| [snarks](./libs/snarks/)                         | groth, plonk            | 📝     |
+| [commitment schemes](./libs/pcs/)                | Merkle tree, FRI, KZG   | 📝     |
 
 > [!NOTE]
 > This is just an initial roadmap to define the scope of the lib. They are not definitive and may vary in the future as we explore and work.
@@ -107,4 +107,3 @@ These are the main resources that guided our learning and implementations:
 - [Moon math](https://leastauthority.com/community-matters/moonmath-manual/)
 - [An Introduction to Pairing-Based Cryptography](https://www.math.uwaterloo.ca/~ajmeneze/publications/pairings.pdf)
 - [Why and How zk-SNARK Works](https://arxiv.org/pdf/1906.07221)
-- [Lambda sparkling water bootcamp](https://github.com/lambdaclass/sparkling_water_bootcamp/)
