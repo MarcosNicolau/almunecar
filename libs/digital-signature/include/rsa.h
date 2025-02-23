@@ -26,6 +26,7 @@ typedef enum {
     RSA_MessageTooLong,
     RSA_MessageTooShort,
     RSA_InvalidEncodedMessage,
+    RSA_InvalidSignature,
 } RSAError;
 
 DEFINE_RESULT(struct {}, RSAError, RSAEncryptResult)
@@ -92,6 +93,6 @@ RSASignResult rsa_sign_PKCS1v15(UInt8Array msg, RSAKeyPair key_pair, UInt8Array 
  *
  *  - 0: invalid signature
  */
-RSAVerificationResult rsa_verify_signature_PKCS1v15(uint8_t *signature, uint8_t *msg, RSAPublicKey *pub);
+RSAVerificationResult rsa_verify_signature_PKCS1v15(UInt8Array msg, UInt8Array signature, RSAPublicKey pub);
 
 #endif

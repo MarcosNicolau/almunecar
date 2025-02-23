@@ -82,6 +82,10 @@ void rsa_decrypt(BigUint cipher, RSAKeyPair key_pair, BigUint *out) {
     biguint_pow_mod(cipher, key_pair.priv.d, key_pair.pub.n, out);
 };
 
+void rsa_sign(BigUint msg, RSAKeyPair key_pair, BigUint *signature) {
+    biguint_pow_mod(msg, key_pair.priv.d, key_pair.pub.n, signature);
+}
+
 RSAEncryptResult rsa_encrypt_msg_PKCS1v15(UInt8Array msg, RSAPublicKey pub, UInt8Array *buf) {
     // k represents the length of n in bytes
     int k = (biguint_bits(pub.n) + 7) / 8;
@@ -192,7 +196,7 @@ RSADecryptResult rsa_decrypt_msg_PKCS1v15(RSAKeyPair key_pair, UInt8Array cipher
     return Ok(RSADecryptResult, {});
 };
 
-RSASignResult rsa_sign_PKCS1v15(UInt8Array msg, RSAKeyPair key_pair, UInt8Array *signature) {
+RSASignResult rsa_sign_PKCS1v15(UInt8Array msg, RSAKeyPair key_pair, UInt8Array *buf) {
     // k represents the length of n in bytes
     int k = (biguint_bits(key_pair.pub.n) + 7) / 8;
     int limbs_size = k / 8;
@@ -224,26 +228,100 @@ RSASignResult rsa_sign_PKCS1v15(UInt8Array msg, RSAKeyPair key_pair, UInt8Array 
     }
 
     // EM = 0x00 || 0x01 || PS || 0x00 || T.
-    uint8_t *em = malloc(k);
+    uint8_t *em_bytes = malloc(k);
     i = 0;
-    em[i++] = 0x00;
-    em[i++] = 0x01;
+    em_bytes[i++] = 0x00;
+    em_bytes[i++] = 0x01;
     for (; i < k - t_len - 1; i++) {
-        em[i] = 0xff;
+        em_bytes[i] = 0xff;
     }
-    em[i++] = 0x00;
+    em_bytes[i++] = 0x00;
     for (int j = 0; j < t_len; j++)
-        em[i++] = t[j];
+        em_bytes[i++] = t[j];
 
-    if (signature->size < k) {
-        signature->array = realloc(signature->array, k);
-        signature->size = k;
+    BigUint em = biguint_new_heap(limbs_size);
+    biguint_from_bytes_big_endian(em_bytes, &em);
+
+    BigUint signature = biguint_new_heap(limbs_size);
+    rsa_sign(em, key_pair, &signature);
+
+    if (buf->size < k) {
+        buf->array = realloc(buf->array, k);
+        buf->size = k;
     }
+    biguint_get_bytes_big_endian(signature, buf->array);
 
-    for (int j = 0; j < k; j++)
-        signature->array[j] = em[j];
-
-    free(em);
+    free(em_bytes);
+    biguint_free(&signature, &em);
 
     return Ok(RSASignResult, {});
 }
+
+RSAVerificationResult rsa_verify_signature_PKCS1v15(UInt8Array msg, UInt8Array signature_bytes, RSAPublicKey pub) {
+    // k represents the length of n in bytes
+    int k = (biguint_bits(pub.n) + 7) / 8;
+    int limbs_size = k / 8;
+
+    if (signature_bytes.size < k) {
+        return Err(RSAVerificationResult, RSA_InvalidSignature);
+    }
+
+    BigUint signature = biguint_new_heap(limbs_size);
+    biguint_from_bytes_big_endian(signature_bytes.array, &signature);
+
+    BigUint em = biguint_new_heap(limbs_size);
+    biguint_pow_mod(signature, pub.e, pub.n, &em);
+
+    // EM = 0x00 || 0x01 || PS || 0x00 || T.
+    uint8_t *em_bytes = malloc(k);
+    biguint_get_bytes_big_endian(em, em_bytes);
+
+    int i = 0;
+    if (em_bytes[i++] != 0x00) {
+        return Err(RSAVerificationResult, RSA_InvalidSignature);
+    }
+    if (em_bytes[i++] != 0x01) {
+        return Err(RSAVerificationResult, RSA_InvalidSignature);
+    }
+    int count = 0;
+    uint8_t byte = em_bytes[i++];
+    while (byte == 0xff) {
+        byte = em_bytes[i++];
+        // TOOD validate byte = 0xff
+        count++;
+    }
+    // TODO check this
+    if (count < 8) {
+        return Err(RSAVerificationResult, RSA_InvalidSignature);
+    }
+    if (byte != 0x00) {
+        return Err(RSAVerificationResult, RSA_InvalidSignature);
+    }
+
+    i += 18;
+
+    // the rest is the message
+    uint8_t *decoded_msg_hash = malloc(32);
+    for (int j = 0; j < 32; j++) {
+        decoded_msg_hash[j] = em_bytes[i++];
+    }
+
+    // hash recovered message and verify that they are the same
+    sha256 original_msg_hasher = sha256_new();
+    sha256_update(&original_msg_hasher, msg.array, msg.size);
+    u256 original_msg_hash = sha256_finalize(&original_msg_hasher);
+    u256 got_hash = u256_from_bytes_big_endian(decoded_msg_hash);
+
+    u256_println(original_msg_hash);
+    u256_println(got_hash);
+
+    free(em_bytes);
+    biguint_free(&signature, &em);
+
+    int res = u256_cmp(original_msg_hash, got_hash);
+    if (res != 0) {
+        return Err(RSAVerificationResult, RSA_InvalidSignature);
+    }
+
+    return Ok(RSAVerificationResult, {});
+};

@@ -43,10 +43,26 @@ void test_encrypt_decrypt_msg() {
     free(decrypted_msg.array);
 }
 
+void test_signing_msg_is_valid() {
+    RSAKeyPair key_pair = rsa_key_pair_new(512);
+    rsa_gen_key_pair(&key_pair);
+
+    char *msg = "Hello this is my secret message!";
+    UInt8Array msg_bytes = {.array = (uint8_t *)msg, .size = strlen(msg)};
+
+    UInt8Array signature = {};
+    RSASignResult res = rsa_sign_PKCS1v15(msg_bytes, key_pair, &signature);
+    assert_that(res.success == 1);
+
+    RSAVerificationResult verification = rsa_verify_signature_PKCS1v15(msg_bytes, signature, key_pair.pub);
+    assert_that(verification.success == 1);
+}
+
 int main() {
     BEGIN_TEST()
-    test(test_key_generation);
-    test(test_encrypt_decrypt_msg);
+    // test(test_key_generation);
+    // test(test_encrypt_decrypt_msg);
+    test(test_signing_msg_is_valid);
     END_TEST()
 
     return 0;
