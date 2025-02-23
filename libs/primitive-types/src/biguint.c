@@ -172,9 +172,10 @@ int biguint_bits(BigUint a) {
 }
 
 int biguint_cmp(BigUint a, BigUint b) {
-    for (int i = a.size - 1; i >= 0; i--) {
-        uint64_t a_i = (uint64_t)a.limbs[i];
-        uint64_t b_i = (uint64_t)b.limbs[i];
+    int limit = get_min_size(a, b);
+    for (int i = limit - 1; i >= 0; i--) {
+        uint64_t a_i = a.limbs[i];
+        uint64_t b_i = b.limbs[i];
         if (a_i < b_i)
             return -1;
         else if (a_i > b_i)
@@ -335,9 +336,9 @@ void biguint_pow_mod(BigUint a, BigUint exponent, BigUint m, BigUint *out) {
     // note that we could use mul_mod but this way we avoid
     // allocating and freeing memory on the heap every iteration as mul_mod does it for use
     BigUint base = biguint_new_heap(a.size * 2);
-    BigUint mod = biguint_new_heap(a.size * 2);
-    BigUint one = biguint_new_heap(a.size * 2);
-    BigUint exp = biguint_new_heap(exponent.size * 2);
+    BigUint mod = biguint_new_heap(m.size * 2);
+    BigUint one = biguint_new(1);
+    BigUint exp = biguint_new_heap(exponent.size);
     BigUint y = biguint_new_heap(a.size * 2);
     biguint_one(&y);
     biguint_cpy(&base, a);
@@ -366,7 +367,7 @@ void biguint_pow_mod(BigUint a, BigUint exponent, BigUint m, BigUint *out) {
 
     biguint_cpy(out, base);
 
-    biguint_free(&base, &mod, &one, &exp, &y);
+    biguint_free(&base, &mod, &exp, &y);
 }
 
 void biguint_bitand(BigUint a, BigUint b, BigUint *out) {

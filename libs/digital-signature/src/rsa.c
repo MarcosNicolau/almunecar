@@ -74,3 +74,119 @@ void rsa_gen_key_pair(RSAKeyPair *key_pair) {
 
     biguint_free(&p, &q, &n, &one, &lambda_n, &e, &d);
 }
+
+void rsa_encrypt(BigUint msg, RSAPublicKey pub, BigUint *cypher) { biguint_pow_mod(msg, pub.e, pub.n, cypher); };
+
+void rsa_decrypt(BigUint cipher, RSAKeyPair key_pair, BigUint *out) {
+    biguint_pow_mod(cipher, key_pair.priv.d, key_pair.pub.n, out);
+};
+
+RSAEncryptResult rsa_encrypt_msg_PKCS1v15(UInt8Array msg, RSAPublicKey pub, UInt8Array *buf) {
+    // k represents the length of n in bytes
+    int k = (biguint_bits(pub.n) + 7) / 8;
+    int limbs_size = k / 8;
+
+    // message too long
+    if (msg.size > k - 11) {
+        return Err(RSAEncryptResult, RSA_MessageTooLong);
+    }
+
+    uint8_t *ps = malloc((k - msg.size - 3));
+    for (int j = 0; j < k - msg.size - 3; j++) {
+        uint8_t rand = 0;
+        while (rand == 0) {
+            rand = u8_random();
+        }
+        ps[j] = rand;
+    }
+    // EM = 0x00 || 0x02 || PS || 0x00 || M.
+    uint8_t *em_bytes = malloc(k);
+    int i = 0;
+    em_bytes[i++] = 0x00;
+    em_bytes[i++] = 0x02;
+    for (int j = 0; j < (k - msg.size - 3); j++) {
+        em_bytes[i++] = ps[j];
+    }
+    em_bytes[i++] = 0x00;
+    for (int j = 0; j < msg.size; j++) {
+        em_bytes[i++] = msg.array[j];
+    }
+
+    BigUint em = biguint_new_heap(limbs_size);
+    biguint_from_bytes_big_endian(em_bytes, &em);
+
+    BigUint chipher = biguint_new_heap(limbs_size);
+    rsa_encrypt(em, pub, &chipher);
+
+    if (buf->size < k) {
+        buf->array = realloc(buf->array, k);
+        buf->size = k;
+    }
+    biguint_get_bytes_big_endian(chipher, buf->array);
+
+    biguint_free(&em, &chipher);
+    free(ps);
+    free(em_bytes);
+
+    return Ok(RSAEncryptResult, {});
+}
+
+RSADecryptResult rsa_decrypt_msg_PKCS1v15(RSAKeyPair key_pair, UInt8Array cipher_bytes, UInt8Array *buf) {
+    // k represents the length of n in bytes
+    int k = (biguint_bits(key_pair.pub.n) + 7) / 8;
+    int limbs_size = k / 8;
+
+    if (cipher_bytes.size > k) {
+        return Err(RSADecryptResult, RSA_MessageTooLong);
+    }
+
+    if (cipher_bytes.size < 11) {
+        return Err(RSADecryptResult, RSA_MessageTooShort);
+    }
+
+    BigUint cipher = biguint_new_heap(limbs_size);
+    biguint_from_bytes_big_endian(cipher_bytes.array, &cipher);
+
+    BigUint em = biguint_new_heap(limbs_size);
+    rsa_decrypt(cipher, key_pair, &em);
+
+    // EM = 0x00 || 0x02 || PS || 0x00 || M.
+    uint8_t *em_bytes = malloc(k);
+    biguint_get_bytes_big_endian(em, em_bytes);
+
+    biguint_free(&cipher, &em);
+    int i = 0;
+    if (em_bytes[i++] != 0x00) {
+        return Err(RSADecryptResult, RSA_InvalidEncodedMessage);
+    }
+    if (em_bytes[i++] != 0x02) {
+        return Err(RSADecryptResult, RSA_InvalidEncodedMessage);
+    }
+    int count = 0;
+    uint8_t byte = em_bytes[i++];
+    while (byte != 0 || count > k - 11) {
+        byte = em_bytes[i++];
+        count++;
+    }
+    if (count < 8) {
+        return Err(RSADecryptResult, RSA_InvalidEncodedMessage);
+    }
+    if (byte != 0x00) {
+        return Err(RSADecryptResult, RSA_InvalidEncodedMessage);
+    }
+
+    // the rest is the message
+    int msg_size = cipher_bytes.size - count - 3;
+    if (buf->size < msg_size + 1) {
+        buf->array = realloc(buf->array, msg_size + 1);
+        buf->size = msg_size;
+    }
+    for (int j = 0; j < msg_size; j++) {
+        buf->array[j] = em_bytes[i++];
+    }
+    buf->array[msg_size] = '\0';
+
+    free(em_bytes);
+
+    return Ok(RSADecryptResult, {});
+};
