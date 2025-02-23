@@ -1,3 +1,4 @@
+#include <hashes/sha256.h>
 #include <rsa.h>
 
 #define e_const 65537
@@ -190,3 +191,59 @@ RSADecryptResult rsa_decrypt_msg_PKCS1v15(RSAKeyPair key_pair, UInt8Array cipher
 
     return Ok(RSADecryptResult, {});
 };
+
+RSASignResult rsa_sign_PKCS1v15(UInt8Array msg, RSAKeyPair key_pair, UInt8Array *signature) {
+    // k represents the length of n in bytes
+    int k = (biguint_bits(key_pair.pub.n) + 7) / 8;
+    int limbs_size = k / 8;
+
+    // see https://www.rfc-editor.org/rfc/pdfrfc/rfc4055.txt.pdf page-15
+    // 1.2.840.113549.1.1.11
+    // 1.2.840.113549.1 -> represents pkcs-1 oid
+    // with .1 -> represents rsaEncryption oid
+    // with .11 -> represent sha256 oid
+    const uint8_t SHA256_IDENTIFIER[] = {0x30, 0x31, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01,
+                                         0x65, 0x03, 0x04, 0x02, 0x01, 0x05, 0x00, 0x04, 0x20};
+
+    sha256 hasher = sha256_new();
+    sha256_update(&hasher, msg.array, msg.size);
+    u256 msg_digest = sha256_finalize(&hasher);
+    uint8_t msg_digest_bytes[32] = {};
+    u256_get_bytes_big_endian(msg_digest_bytes, msg_digest);
+
+    int t_len = 51;
+    uint8_t t[t_len];
+    int i = 0;
+    for (; i < 19; i++)
+        t[i] = SHA256_IDENTIFIER[i];
+    for (int j = 0; j < 32; j++)
+        t[i] = msg_digest_bytes[j];
+
+    if (k < t_len + 11) {
+        return Err(RSASignResult, RSA_MessageTooShort);
+    }
+
+    // EM = 0x00 || 0x01 || PS || 0x00 || T.
+    uint8_t *em = malloc(k);
+    i = 0;
+    em[i++] = 0x00;
+    em[i++] = 0x01;
+    for (; i < k - t_len - 1; i++) {
+        em[i] = 0xff;
+    }
+    em[i++] = 0x00;
+    for (int j = 0; j < t_len; j++)
+        em[i++] = t[j];
+
+    if (signature->size < k) {
+        signature->array = realloc(signature->array, k);
+        signature->size = k;
+    }
+
+    for (int j = 0; j < k; j++)
+        signature->array[j] = em[j];
+
+    free(em);
+
+    return Ok(RSASignResult, {});
+}

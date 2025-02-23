@@ -30,6 +30,8 @@ typedef enum {
 
 DEFINE_RESULT(struct {}, RSAError, RSAEncryptResult)
 DEFINE_RESULT(struct {}, RSAError, RSADecryptResult)
+DEFINE_RESULT(struct {}, RSAError, RSASignResult)
+DEFINE_RESULT(struct {}, RSAError, RSAVerificationResult)
 
 #define rsa_key_pair_new(BIT_SIZE)                                                                                     \
     (RSAKeyPair) {                                                                                                     \
@@ -82,13 +84,14 @@ RSAEncryptResult rsa_encrypt_msg_PKCS1v15(UInt8Array msg, RSAPublicKey pub, UInt
  */
 RSADecryptResult rsa_decrypt_msg_PKCS1v15(RSAKeyPair key_pair, UInt8Array cipher, UInt8Array *msg);
 
-void rsa_sign_PKCS1v15(RSAPrivateKey *priv, void *msg, uint8_t *buffer);
+RSASignResult rsa_sign_PKCS1v15(UInt8Array msg, RSAKeyPair key_pair, UInt8Array *signature);
+
 /**
  * @returns
  *  - 1: valid signature
  *
  *  - 0: invalid signature
  */
-int rsa_verify_signature_PKCS1v15(uint8_t *signature, uint8_t *msg, RSAPublicKey *pub);
+RSAVerificationResult rsa_verify_signature_PKCS1v15(uint8_t *signature, uint8_t *msg, RSAPublicKey *pub);
 
 #endif
