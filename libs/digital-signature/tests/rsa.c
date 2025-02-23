@@ -30,11 +30,11 @@ void test_encrypt_decrypt_msg() {
     UInt8Array msg_bytes = {.array = (uint8_t *)msg, .size = strlen(msg)};
 
     UInt8Array cipher = {};
-    EncryptResult res = rsa_encrypt_msg_PKCS1v15(msg_bytes, key_pair.pub, &cipher);
+    RSAEncryptResult res = rsa_encrypt_msg_PKCS1v15(msg_bytes, key_pair.pub, &cipher);
     assert_that(res.success == 1);
 
     UInt8Array decrypted_msg = {};
-    DecryptResult decrypt_result = rsa_decrypt_msg_PKCS1v15(key_pair, cipher, &decrypted_msg);
+    RSADecryptResult decrypt_result = rsa_decrypt_msg_PKCS1v15(key_pair, cipher, &decrypted_msg);
     assert_that(decrypt_result.success == 1);
 
     assert_that(strcmp((char *)decrypted_msg.array, msg) == 0);

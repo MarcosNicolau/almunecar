@@ -28,8 +28,8 @@ typedef enum {
     RSA_InvalidEncodedMessage,
 } RSAError;
 
-DEFINE_RESULT(struct {}, RSAError, EncryptResult)
-DEFINE_RESULT(struct {}, RSAError, DecryptResult)
+DEFINE_RESULT(struct {}, RSAError, RSAEncryptResult)
+DEFINE_RESULT(struct {}, RSAError, RSADecryptResult)
 
 #define rsa_key_pair_new(BIT_SIZE)                                                                                     \
     (RSAKeyPair) {                                                                                                     \
@@ -64,9 +64,9 @@ void rsa_gen_key_pair(RSAKeyPair *key_pair);
  * @param pub      The RSA public key.
  * @param cipher   A pointer to a UInt8Array where the encrypted data will be stored.
  *                 If NULL, a new buffer will be allocated.
- * @return         EncryptResult containing the encrypted message or an error.
+ * @return         RSAEncryptResult containing the encrypted message or an error.
  */
-EncryptResult rsa_encrypt_msg_PKCS1v15(UInt8Array msg, RSAPublicKey pub, UInt8Array *cipher);
+RSAEncryptResult rsa_encrypt_msg_PKCS1v15(UInt8Array msg, RSAPublicKey pub, UInt8Array *cipher);
 
 /**
  * Decrypts an RSA encrypted with PKCS1 v1.5 padding scheme.
@@ -78,9 +78,9 @@ EncryptResult rsa_encrypt_msg_PKCS1v15(UInt8Array msg, RSAPublicKey pub, UInt8Ar
  * @param cipher   The encrypted message.
  * @param msg      A pointer to a UInt8Array where the decrypted message will be stored.
  *                 If NULL, a new buffer will be allocated.
- * @return         DecryptResult containing the decrypted message or an error.
+ * @return         RSADecryptResult containing the decrypted message or an error.
  */
-DecryptResult rsa_decrypt_msg_PKCS1v15(RSAKeyPair key_pair, UInt8Array cipher, UInt8Array *msg);
+RSADecryptResult rsa_decrypt_msg_PKCS1v15(RSAKeyPair key_pair, UInt8Array cipher, UInt8Array *msg);
 
 void rsa_sign_PKCS1v15(RSAPrivateKey *priv, void *msg, uint8_t *buffer);
 /**

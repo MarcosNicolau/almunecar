@@ -81,14 +81,14 @@ void rsa_decrypt(BigUint cipher, RSAKeyPair key_pair, BigUint *out) {
     biguint_pow_mod(cipher, key_pair.priv.d, key_pair.pub.n, out);
 };
 
-EncryptResult rsa_encrypt_msg_PKCS1v15(UInt8Array msg, RSAPublicKey pub, UInt8Array *buf) {
+RSAEncryptResult rsa_encrypt_msg_PKCS1v15(UInt8Array msg, RSAPublicKey pub, UInt8Array *buf) {
     // k represents the length of n in bytes
     int k = (biguint_bits(pub.n) + 7) / 8;
     int limbs_size = k / 8;
 
     // message too long
     if (msg.size > k - 11) {
-        return Err(EncryptResult, RSA_MessageTooLong);
+        return Err(RSAEncryptResult, RSA_MessageTooLong);
     }
 
     uint8_t *ps = malloc((k - msg.size - 3));
@@ -128,20 +128,20 @@ EncryptResult rsa_encrypt_msg_PKCS1v15(UInt8Array msg, RSAPublicKey pub, UInt8Ar
     free(ps);
     free(em_bytes);
 
-    return Ok(EncryptResult, {});
+    return Ok(RSAEncryptResult, {});
 }
 
-DecryptResult rsa_decrypt_msg_PKCS1v15(RSAKeyPair key_pair, UInt8Array cipher_bytes, UInt8Array *buf) {
+RSADecryptResult rsa_decrypt_msg_PKCS1v15(RSAKeyPair key_pair, UInt8Array cipher_bytes, UInt8Array *buf) {
     // k represents the length of n in bytes
     int k = (biguint_bits(key_pair.pub.n) + 7) / 8;
     int limbs_size = k / 8;
 
     if (cipher_bytes.size > k) {
-        return Err(DecryptResult, RSA_MessageTooLong);
+        return Err(RSADecryptResult, RSA_MessageTooLong);
     }
 
     if (cipher_bytes.size < 11) {
-        return Err(DecryptResult, RSA_MessageTooShort);
+        return Err(RSADecryptResult, RSA_MessageTooShort);
     }
 
     BigUint cipher = biguint_new_heap(limbs_size);
@@ -157,10 +157,10 @@ DecryptResult rsa_decrypt_msg_PKCS1v15(RSAKeyPair key_pair, UInt8Array cipher_by
     biguint_free(&cipher, &em);
     int i = 0;
     if (em_bytes[i++] != 0x00) {
-        return Err(DecryptResult, RSA_InvalidEncodedMessage);
+        return Err(RSADecryptResult, RSA_InvalidEncodedMessage);
     }
     if (em_bytes[i++] != 0x02) {
-        return Err(DecryptResult, RSA_InvalidEncodedMessage);
+        return Err(RSADecryptResult, RSA_InvalidEncodedMessage);
     }
     int count = 0;
     uint8_t byte = em_bytes[i++];
@@ -169,10 +169,10 @@ DecryptResult rsa_decrypt_msg_PKCS1v15(RSAKeyPair key_pair, UInt8Array cipher_by
         count++;
     }
     if (count < 8) {
-        return Err(DecryptResult, RSA_InvalidEncodedMessage);
+        return Err(RSADecryptResult, RSA_InvalidEncodedMessage);
     }
     if (byte != 0x00) {
-        return Err(DecryptResult, RSA_InvalidEncodedMessage);
+        return Err(RSADecryptResult, RSA_InvalidEncodedMessage);
     }
 
     // the rest is the message
@@ -188,5 +188,5 @@ DecryptResult rsa_decrypt_msg_PKCS1v15(RSAKeyPair key_pair, UInt8Array cipher_by
 
     free(em_bytes);
 
-    return Ok(DecryptResult, {});
+    return Ok(RSADecryptResult, {});
 };
