@@ -176,8 +176,6 @@ int biguint_cmp(BigUint a, BigUint b) {
     for (int i = limit - 1; i >= 0; i--) {
         uint64_t a_i = a.limbs[i];
         uint64_t b_i = b.limbs[i];
-        uint64_t a_i = (uint64_t)a.limbs[i];
-        uint64_t b_i = (uint64_t)b.limbs[i];
         if (a_i < b_i)
             return -1;
         else if (a_i > b_i)
