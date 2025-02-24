@@ -1,6 +1,7 @@
 #ifndef RSA_H
 #define RSA_H
 
+#include <hashes/types.h>
 #include <math/arithmetics.h>
 #include <math/primes.h>
 #include <math/random.h>
@@ -85,7 +86,7 @@ RSAEncryptResult rsa_encrypt_msg_PKCS1v15(UInt8Array msg, RSAPublicKey pub, UInt
  */
 RSADecryptResult rsa_decrypt_msg_PKCS1v15(RSAKeyPair key_pair, UInt8Array cipher, UInt8Array *msg);
 
-RSASignResult rsa_sign_PKCS1v15(UInt8Array msg, RSAKeyPair key_pair, UInt8Array *signature);
+RSASignResult rsa_sign_PKCS1v15(UInt8Array msg, RSAKeyPair key_pair, HashFunction hash, UInt8Array *signature);
 
 /**
  * @returns
