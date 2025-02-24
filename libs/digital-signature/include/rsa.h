@@ -1,7 +1,6 @@
 #ifndef RSA_H
 #define RSA_H
 
-#include <hashes/types.h>
 #include <math/arithmetics.h>
 #include <math/primes.h>
 #include <math/random.h>
@@ -23,11 +22,14 @@ typedef struct {
     unsigned int bit_size;
 } RSAKeyPair;
 
+typedef enum { RSA_HASH_MD2, RSA_HASH_MD5, RSA_HASH_SHA1, RSA_HASH_SHA256, RSA_HASH_SHA384, RSA_HASH_SHA512 } RSAHashes;
+
 typedef enum {
     RSA_MessageTooLong,
     RSA_MessageTooShort,
     RSA_InvalidEncodedMessage,
     RSA_InvalidSignature,
+    RSA_HashNotSupported
 } RSAError;
 
 DEFINE_RESULT(struct {}, RSAError, RSAEncryptResult)
@@ -86,7 +88,7 @@ RSAEncryptResult rsa_encrypt_msg_PKCS1v15(UInt8Array msg, RSAPublicKey pub, UInt
  */
 RSADecryptResult rsa_decrypt_msg_PKCS1v15(RSAKeyPair key_pair, UInt8Array cipher, UInt8Array *msg);
 
-RSASignResult rsa_sign_PKCS1v15(UInt8Array msg, RSAKeyPair key_pair, HashFunction hash, UInt8Array *signature);
+RSASignResult rsa_sign_PKCS1v15(UInt8Array msg, RSAKeyPair key_pair, RSAHashes hash, UInt8Array *signature);
 
 /**
  * @returns

@@ -9,13 +9,45 @@
  *
  */
 
-// see https://www.rfc-editor.org/rfc/pdfrfc/rfc4055.txt.pdf page-15
-// 1.2.840.113549.1.1.11
-// 1.2.840.113549.1 -> represents pkcs-1 oid
-// with .1 -> represents rsaEncryption oid
-// with .11 -> represent sha256 oid
-const uint8_t SHA256_IDENTIFIER[] = {0x30, 0x31, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01,
-                                     0x65, 0x03, 0x04, 0x02, 0x01, 0x05, 0x00, 0x04, 0x20};
+typedef struct {
+    uint8_t oid[19]; // Maximum OID length from the given list
+    int size;
+    int hash_len;
+    RSAHashes function;
+    int supported; // If almunecar supports the hash function
+} OidEntry;
+
+const OidEntry oid_list[] = {
+    {{0x30, 0x20, 0x30, 0x0c, 0x06, 0x08, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x02, 0x02, 0x05, 0x00, 0x04, 0x10},
+     18,
+     16,
+     RSA_HASH_MD2,
+     0},
+    {{0x30, 0x20, 0x30, 0x0c, 0x06, 0x08, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x02, 0x05, 0x05, 0x00, 0x04, 0x10},
+     18,
+     16,
+     RSA_HASH_MD5,
+     0},
+    {{0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2b, 0x0e, 0x03, 0x02, 0x1a, 0x05, 0x00, 0x04, 0x14},
+     15,
+     32,
+     RSA_HASH_SHA1,
+     0},
+    {{0x30, 0x31, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01, 0x05, 0x00, 0x04, 0x20},
+     19,
+     32,
+     RSA_HASH_SHA256,
+     1},
+    {{0x30, 0x41, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x02, 0x05, 0x00, 0x04, 0x30},
+     19,
+     48,
+     RSA_HASH_SHA384,
+     0},
+    {{0x30, 0x51, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x03, 0x05, 0x00, 0x04, 0x40},
+     19,
+     64,
+     RSA_HASH_SHA512,
+     0}};
 
 /**
  * Rsa builds upon the fact that it is easy to find three larger integers e,d,n such that for any another integer
@@ -210,9 +242,9 @@ RSADecryptResult rsa_decrypt_msg_PKCS1v15(RSAKeyPair key_pair, UInt8Array cipher
     return Ok(RSADecryptResult, {});
 };
 
-void hash_msg(HashFunction hasher, UInt8Array msg, UInt8Array *hash) {
+void hash_msg(RSAHashes hasher, UInt8Array msg, UInt8Array *hash) {
     switch (hasher) {
-    case SHA256:
+    case RSA_HASH_SHA256:
         sha256 hasher = sha256_new();
         sha256_update(&hasher, msg.array, msg.size);
         u256 msg_digest = sha256_finalize(&hasher);
@@ -223,24 +255,24 @@ void hash_msg(HashFunction hasher, UInt8Array msg, UInt8Array *hash) {
 
 // write hash function oid to the buffer, it assumes the buffer has enough space
 // returns the size of the
-int write_rsa_hash_with_oid(HashFunction hasher, UInt8Array hash, UInt8Array *buf) {
+int write_rsa_hash_with_oid(RSAHashes hasher, UInt8Array hash, UInt8Array *buf) {
     switch (hasher) {
-    case SHA256:
+    case RSA_HASH_SHA256:
         // 19 bytes for the oid and 32 for the hash
         int size = 51;
         buf->array = realloc(buf->array, size);
         buf->size = 51;
         int i = 0;
         for (; i < 19; i++)
-            buf->array[i] = SHA256_IDENTIFIER[i];
-        for (; i < 32; i++)
-            buf->array[i] = hash.array[i];
+            buf->array[i] = oid_list[3].oid[i];
+        for (int j = 0; j < 32; j++)
+            buf->array[i++] = hash.array[j];
 
         break;
     };
 }
 
-RSASignResult rsa_sign_PKCS1v15(UInt8Array msg_bytes, RSAKeyPair key_pair, HashFunction hasher, UInt8Array *buf) {
+RSASignResult rsa_sign_PKCS1v15(UInt8Array msg_bytes, RSAKeyPair key_pair, RSAHashes hasher, UInt8Array *buf) {
     // k represents the length of n in bytes
     int k = (biguint_bits(key_pair.pub.n) + 7) / 8;
     int limbs_size = k / 8;
@@ -285,6 +317,19 @@ RSASignResult rsa_sign_PKCS1v15(UInt8Array msg_bytes, RSAKeyPair key_pair, HashF
     return Ok(RSASignResult, {});
 }
 
+int try_identify_hasher_by_oid(uint8_t *bytes, int size, RSAHashes *hasher) {
+    int num_oids = sizeof(oid_list) / sizeof(OidEntry);
+
+    for (int i = 0; i < num_oids; i++) {
+        if (size >= oid_list[i].size && memcmp(bytes, oid_list[i].oid, oid_list[i].size) == 0) {
+            *hasher = oid_list[i].function;
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 RSAVerificationResult rsa_verify_signature_PKCS1v15(UInt8Array msg, UInt8Array signature_bytes, RSAPublicKey pub) {
     // k represents the length of n in bytes
     int k = (biguint_bits(pub.n) + 7) / 8;
@@ -325,28 +370,45 @@ RSAVerificationResult rsa_verify_signature_PKCS1v15(UInt8Array msg, UInt8Array s
         return Err(RSAVerificationResult, RSA_InvalidSignature);
     }
 
-    // TODO: here start matching by each read to get the hash identifier
-    i += 19;
+    RSAHashes hasher;
 
-    // the rest is the message
-    uint8_t *decoded_msg_hash = malloc(32);
-    for (int j = 0; j < 32; j++) {
-        decoded_msg_hash[j] = em_bytes[i++];
+    int identified = 0;
+    uint8_t hash_oid[19];
+    int j = 0;
+    while (identified == 0 && i < k && j < 19) {
+        hash_oid[j++] = em_bytes[i++];
+        identified = try_identify_hasher_by_oid(hash_oid, j, &hasher);
     }
 
-    // hash recovered message and verify that they are the same
-    sha256 original_msg_hasher = sha256_new();
-    sha256_update(&original_msg_hasher, msg.array, msg.size);
-    u256 original_msg_hash = sha256_finalize(&original_msg_hasher);
-    u256 got_hash = u256_from_bytes_big_endian(decoded_msg_hash);
+    if (identified == 0) {
+        return Err(RSAVerificationResult, RSA_InvalidSignature);
+    }
+
+    // the rest is the signature message hash
+    int hash_size = oid_list[hasher].hash_len;
+    if (hash_size == 0) {
+        return Err(RSAVerificationResult, RSA_HashNotSupported);
+    }
+
+    uint8_t *decoded_msg_hash = malloc(hash_size);
+    for (int j = 0; j < hash_size; j++)
+        decoded_msg_hash[j] = em_bytes[i++];
+
+    // hash original message and verify they are the same
+    UInt8Array original_msg_hash = {.array = malloc(hash_size), .size = hash_size};
+    hash_msg(hasher, msg, &original_msg_hash);
 
     free(em_bytes);
     biguint_free(&signature, &em);
 
-    int res = u256_cmp(original_msg_hash, got_hash);
-    if (res != 0) {
+    if (memcmp(original_msg_hash.array, decoded_msg_hash, hash_size) != 0) {
+        free(original_msg_hash.array);
+        free(decoded_msg_hash);
         return Err(RSAVerificationResult, RSA_InvalidSignature);
     }
+
+    free(original_msg_hash.array);
+    free(decoded_msg_hash);
 
     return Ok(RSAVerificationResult, {});
 };

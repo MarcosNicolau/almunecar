@@ -1,4 +1,5 @@
 #include <digital-signature/rsa.h>
+#include <hashes/sha256.h>
 #include <math/random.h>
 #include <utils/test.h>
 
@@ -51,7 +52,7 @@ void test_signing_msg_is_valid() {
     UInt8Array msg_bytes = {.array = (uint8_t *)msg, .size = strlen(msg)};
 
     UInt8Array signature = {};
-    RSASignResult res = rsa_sign_PKCS1v15(msg_bytes, key_pair, &signature);
+    RSASignResult res = rsa_sign_PKCS1v15(msg_bytes, key_pair, RSA_HASH_SHA256, &signature);
     assert_that(res.success == 1);
 
     RSAVerificationResult verification = rsa_verify_signature_PKCS1v15(msg_bytes, signature, key_pair.pub);
