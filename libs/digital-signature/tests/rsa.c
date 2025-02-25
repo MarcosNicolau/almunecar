@@ -61,8 +61,8 @@ void test_signing_msg_is_valid() {
 
 int main() {
     BEGIN_TEST()
-    // test(test_key_generation);
-    // test(test_encrypt_decrypt_msg);
+    test(test_key_generation);
+    test(test_encrypt_decrypt_msg);
     test(test_signing_msg_is_valid);
     END_TEST()
 

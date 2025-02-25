@@ -244,20 +244,23 @@ RSADecryptResult rsa_decrypt_msg_PKCS1v15(RSAKeyPair key_pair, UInt8Array cipher
 
 void hash_msg(RSAHashes hasher, UInt8Array msg, UInt8Array *hash) {
     switch (hasher) {
-    case RSA_HASH_SHA256:
-        sha256 hasher = sha256_new();
-        sha256_update(&hasher, msg.array, msg.size);
-        u256 msg_digest = sha256_finalize(&hasher);
+    case RSA_HASH_SHA256: {
+        sha256 sha_hasher = sha256_new();
+        sha256_update(&sha_hasher, msg.array, msg.size);
+        u256 msg_digest = sha256_finalize(&sha_hasher);
         u256_get_bytes_big_endian(hash->array, msg_digest);
-        break;
+        return;
+    }
+    default:
+        return;
     };
 }
 
 // write hash function oid to the buffer, it assumes the buffer has enough space
 // returns the size of the
-int write_rsa_hash_with_oid(RSAHashes hasher, UInt8Array hash, UInt8Array *buf) {
+void write_rsa_hash_with_oid(RSAHashes hasher, UInt8Array hash, UInt8Array *buf) {
     switch (hasher) {
-    case RSA_HASH_SHA256:
+    case RSA_HASH_SHA256: {
         // 19 bytes for the oid and 32 for the hash
         int size = 51;
         buf->array = realloc(buf->array, size);
@@ -268,7 +271,10 @@ int write_rsa_hash_with_oid(RSAHashes hasher, UInt8Array hash, UInt8Array *buf) 
         for (int j = 0; j < 32; j++)
             buf->array[i++] = hash.array[j];
 
-        break;
+        return;
+    }
+    default:
+        return;
     };
 }
 
