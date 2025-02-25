@@ -4,20 +4,30 @@
 #define e_const 65537
 
 /**
+ * Rsa builds upon the fact that it is easy to find three larger integers e,d,n such that for any another integer
+ * m 0 <= m < n:
+ *                                                  (m^e)^d = m (mod n)
  *
- * RSA Hash function oids
+ * However, when given e and n, it is not feasible to derive d.
  *
+ * e and n form the Public key and d defines the Private key.
+ * m is defined as the message.
+ *
+ * From this principle, rsa protocol defines the following operations:
+ * 1. Key generation
+ * 2. Encryption/Decryption of messages
+ * 3. Signing/Verifying messages recipients
  */
 
 typedef struct {
     uint8_t oid[19]; // Maximum OID length from the given list
-    int size;
+    int oid_size;
     int hash_len;
     RSAHashes function;
     int supported; // If almunecar supports the hash function
-} OidEntry;
+} RSAHashEntry;
 
-const OidEntry oid_list[] = {
+const RSAHashEntry hash_list[] = {
     {{0x30, 0x20, 0x30, 0x0c, 0x06, 0x08, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x02, 0x02, 0x05, 0x00, 0x04, 0x10},
      18,
      16,
@@ -49,21 +59,8 @@ const OidEntry oid_list[] = {
      RSA_HASH_SHA512,
      0}};
 
-/**
- * Rsa builds upon the fact that it is easy to find three larger integers e,d,n such that for any another integer
- * m 0 <= m < n:
- *                                                  (m^e)^d = m (mod n)
- *
- * However, when given e and n, it is not feasible to derive d.
- *
- * e and n form the Public key and d defines the Private key.
- * m is defined as the message.
- *
- * From this principle, rsa protocol defines the following operations:
- * 1. Key generation
- * 2. Encryption/Decryption of messages
- * 3. Signing/Verifying messages recipients
- */
+void hash_msg(RSAHashes hasher, UInt8Array msg, UInt8Array *hash);
+int try_identify_hasher_by_oid(uint8_t *bytes, int size, RSAHashes *hasher);
 
 // Generating a key pair consists of:
 // 1. generating two random prime number p,q
@@ -122,16 +119,6 @@ void rsa_gen_key_pair(RSAKeyPair *key_pair) {
     biguint_free(&p, &q, &n, &one, &lambda_n, &e, &d);
 }
 
-void rsa_encrypt(BigUint msg, RSAPublicKey pub, BigUint *cypher) { biguint_pow_mod(msg, pub.e, pub.n, cypher); };
-
-void rsa_decrypt(BigUint cipher, RSAKeyPair key_pair, BigUint *out) {
-    biguint_pow_mod(cipher, key_pair.priv.d, key_pair.pub.n, out);
-};
-
-void rsa_sign(BigUint msg, RSAKeyPair key_pair, BigUint *signature) {
-    biguint_pow_mod(msg, key_pair.priv.d, key_pair.pub.n, signature);
-}
-
 RSAEncryptResult rsa_encrypt_msg_PKCS1v15(UInt8Array msg, RSAPublicKey pub, UInt8Array *buf) {
     // k represents the length of n in bytes
     int k = (biguint_bits(pub.n) + 7) / 8;
@@ -166,16 +153,16 @@ RSAEncryptResult rsa_encrypt_msg_PKCS1v15(UInt8Array msg, RSAPublicKey pub, UInt
     BigUint em = biguint_new_heap(limbs_size);
     biguint_from_bytes_big_endian(em_bytes, &em);
 
-    BigUint chipher = biguint_new_heap(limbs_size);
-    rsa_encrypt(em, pub, &chipher);
+    BigUint cipher = biguint_new_heap(limbs_size);
+    biguint_pow_mod(em, pub.e, pub.n, &cipher);
 
     if (buf->size < k) {
         buf->array = realloc(buf->array, k);
         buf->size = k;
     }
-    biguint_get_bytes_big_endian(chipher, buf->array);
+    biguint_get_bytes_big_endian(cipher, buf->array);
 
-    biguint_free(&em, &chipher);
+    biguint_free(&em, &cipher);
     free(ps);
     free(em_bytes);
 
@@ -199,35 +186,39 @@ RSADecryptResult rsa_decrypt_msg_PKCS1v15(RSAKeyPair key_pair, UInt8Array cipher
     biguint_from_bytes_big_endian(cipher_bytes.array, &cipher);
 
     BigUint em = biguint_new_heap(limbs_size);
-    rsa_decrypt(cipher, key_pair, &em);
+    biguint_pow_mod(cipher, key_pair.priv.d, key_pair.pub.n, &em);
 
     // EM = 0x00 || 0x02 || PS || 0x00 || M.
     uint8_t *em_bytes = malloc(k);
     biguint_get_bytes_big_endian(em, em_bytes);
-
     biguint_free(&cipher, &em);
+
     int i = 0;
     if (em_bytes[i++] != 0x00) {
+        free(em_bytes);
         return Err(RSADecryptResult, RSA_InvalidEncodedMessage);
     }
     if (em_bytes[i++] != 0x02) {
+        free(em_bytes);
         return Err(RSADecryptResult, RSA_InvalidEncodedMessage);
     }
-    int count = 0;
+    int ps_len = 0;
     uint8_t byte = em_bytes[i++];
-    while (byte != 0 || count > k - 11) {
+    while (byte != 0 || ps_len > k - 11) {
         byte = em_bytes[i++];
-        count++;
+        ps_len++;
     }
-    if (count < 8) {
+    if (ps_len < 8) {
+        free(em_bytes);
         return Err(RSADecryptResult, RSA_InvalidEncodedMessage);
     }
     if (byte != 0x00) {
+        free(em_bytes);
         return Err(RSADecryptResult, RSA_InvalidEncodedMessage);
     }
 
     // the rest is the message
-    int msg_size = cipher_bytes.size - count - 3;
+    int msg_size = cipher_bytes.size - ps_len - 3;
     if (buf->size < msg_size + 1) {
         buf->array = realloc(buf->array, msg_size + 1);
         buf->size = msg_size;
@@ -242,54 +233,32 @@ RSADecryptResult rsa_decrypt_msg_PKCS1v15(RSAKeyPair key_pair, UInt8Array cipher
     return Ok(RSADecryptResult, {});
 };
 
-void hash_msg(RSAHashes hasher, UInt8Array msg, UInt8Array *hash) {
-    switch (hasher) {
-    case RSA_HASH_SHA256: {
-        sha256 sha_hasher = sha256_new();
-        sha256_update(&sha_hasher, msg.array, msg.size);
-        u256 msg_digest = sha256_finalize(&sha_hasher);
-        u256_get_bytes_big_endian(hash->array, msg_digest);
-        return;
-    }
-    default:
-        return;
-    };
-}
-
-// write hash function oid to the buffer, it assumes the buffer has enough space
-// returns the size of the
-void write_rsa_hash_with_oid(RSAHashes hasher, UInt8Array hash, UInt8Array *buf) {
-    switch (hasher) {
-    case RSA_HASH_SHA256: {
-        // 19 bytes for the oid and 32 for the hash
-        int size = 51;
-        buf->array = realloc(buf->array, size);
-        buf->size = 51;
-        int i = 0;
-        for (; i < 19; i++)
-            buf->array[i] = oid_list[3].oid[i];
-        for (int j = 0; j < 32; j++)
-            buf->array[i++] = hash.array[j];
-
-        return;
-    }
-    default:
-        return;
-    };
-}
-
 RSASignResult rsa_sign_PKCS1v15(UInt8Array msg_bytes, RSAKeyPair key_pair, RSAHashes hasher, UInt8Array *buf) {
     // k represents the length of n in bytes
     int k = (biguint_bits(key_pair.pub.n) + 7) / 8;
     int limbs_size = k / 8;
 
-    UInt8Array msg_hash = {.array = (uint8_t[32]){}, .size = 32};
+    RSAHashEntry hash_entry = hash_list[hasher];
+    if (hash_entry.supported == 0) {
+        return Err(RSASignResult, RSA_HashNotSupported);
+    }
+
+    UInt8Array msg_hash = {.array = malloc(hash_entry.hash_len), .size = hash_entry.hash_len};
     hash_msg(hasher, msg_bytes, &msg_hash);
 
     UInt8Array t = {};
-    write_rsa_hash_with_oid(hasher, msg_hash, &t);
+    uint8_t *t = malloc(hash_entry.oid_size + hash_entry.hash_len);
+
+    int i = 0;
+    for (; i < hash_entry.oid_size; i++)
+        buf->array[i] = hash_entry.oid[i];
+    for (int j = 0; j < hash_entry.hash_len; j++)
+        buf->array[i++] = msg_hash.array[j];
+
+    free(msg_hash.array);
 
     if (k < t.size + 11) {
+        free(t.array);
         return Err(RSASignResult, RSA_MessageTooShort);
     }
 
@@ -308,7 +277,7 @@ RSASignResult rsa_sign_PKCS1v15(UInt8Array msg_bytes, RSAKeyPair key_pair, RSAHa
     biguint_from_bytes_big_endian(em_bytes, &em);
 
     BigUint signature = biguint_new_heap(limbs_size);
-    rsa_sign(em, key_pair, &signature);
+    biguint_pow_mod(em, key_pair.priv.d, key_pair.pub.n, &signature);
 
     if (buf->size < k) {
         buf->array = realloc(buf->array, k);
@@ -316,24 +285,11 @@ RSASignResult rsa_sign_PKCS1v15(UInt8Array msg_bytes, RSAKeyPair key_pair, RSAHa
     }
     biguint_get_bytes_big_endian(signature, buf->array);
 
-    free(em_bytes);
     free(t.array);
+    free(em_bytes);
     biguint_free(&signature, &em);
 
     return Ok(RSASignResult, {});
-}
-
-int try_identify_hasher_by_oid(uint8_t *bytes, int size, RSAHashes *hasher) {
-    int num_oids = sizeof(oid_list) / sizeof(OidEntry);
-
-    for (int i = 0; i < num_oids; i++) {
-        if (size >= oid_list[i].size && memcmp(bytes, oid_list[i].oid, oid_list[i].size) == 0) {
-            *hasher = oid_list[i].function;
-            return 1;
-        }
-    }
-
-    return 0;
 }
 
 RSAVerificationResult rsa_verify_signature_PKCS1v15(UInt8Array msg, UInt8Array signature_bytes, RSAPublicKey pub) {
@@ -350,36 +306,43 @@ RSAVerificationResult rsa_verify_signature_PKCS1v15(UInt8Array msg, UInt8Array s
 
     BigUint em = biguint_new_heap(limbs_size);
     biguint_pow_mod(signature, pub.e, pub.n, &em);
+    biguint_free(&signature);
 
     // EM = 0x00 || 0x01 || PS || 0x00 || T.
     uint8_t *em_bytes = malloc(k);
     biguint_get_bytes_big_endian(em, em_bytes);
+    biguint_free(&em);
 
     int i = 0;
     if (em_bytes[i++] != 0x00) {
+        free(em_bytes);
         return Err(RSAVerificationResult, RSA_InvalidSignature);
     }
     if (em_bytes[i++] != 0x01) {
+        free(em_bytes);
         return Err(RSAVerificationResult, RSA_InvalidSignature);
     }
-    int count = 0;
+
+    int ps_len = 0;
     uint8_t byte = em_bytes[i++];
     while (byte == 0xff) {
         byte = em_bytes[i++];
-        count++;
+        ps_len++;
     }
-    // TODO check this
-    if (count < 8) {
+    if (ps_len < 8) {
+        free(em_bytes);
         return Err(RSAVerificationResult, RSA_InvalidSignature);
     }
+
     if (byte != 0x00) {
+        free(em_bytes);
         return Err(RSAVerificationResult, RSA_InvalidSignature);
     }
 
     RSAHashes hasher;
 
     int identified = 0;
-    uint8_t hash_oid[19];
+    uint8_t hash_oid[19]; // 19 is the max hash_oid size
     int j = 0;
     while (identified == 0 && i < k && j < 19) {
         hash_oid[j++] = em_bytes[i++];
@@ -387,15 +350,18 @@ RSAVerificationResult rsa_verify_signature_PKCS1v15(UInt8Array msg, UInt8Array s
     }
 
     if (identified == 0) {
+        free(em_bytes);
         return Err(RSAVerificationResult, RSA_InvalidSignature);
     }
 
-    // the rest is the signature message hash
-    int hash_size = oid_list[hasher].hash_len;
-    if (hash_size == 0) {
+    RSAHashEntry hash_entry = hash_list[hasher];
+    if (hash_entry.supported == 0) {
+        free(em_bytes);
         return Err(RSAVerificationResult, RSA_HashNotSupported);
     }
 
+    // the rest is the signature message hash
+    int hash_size = hash_entry.hash_len;
     uint8_t *decoded_msg_hash = malloc(hash_size);
     for (int j = 0; j < hash_size; j++)
         decoded_msg_hash[j] = em_bytes[i++];
@@ -404,17 +370,40 @@ RSAVerificationResult rsa_verify_signature_PKCS1v15(UInt8Array msg, UInt8Array s
     UInt8Array original_msg_hash = {.array = malloc(hash_size), .size = hash_size};
     hash_msg(hasher, msg, &original_msg_hash);
 
+    int cmp = memcmp(original_msg_hash.array, decoded_msg_hash, hash_size) != 0;
     free(em_bytes);
-    biguint_free(&signature, &em);
-
-    if (memcmp(original_msg_hash.array, decoded_msg_hash, hash_size) != 0) {
-        free(original_msg_hash.array);
-        free(decoded_msg_hash);
-        return Err(RSAVerificationResult, RSA_InvalidSignature);
-    }
-
     free(original_msg_hash.array);
     free(decoded_msg_hash);
 
+    if (cmp != 0)
+        return Err(RSAVerificationResult, RSA_InvalidSignature);
+
     return Ok(RSAVerificationResult, {});
 };
+
+void hash_msg(RSAHashes hasher, UInt8Array msg, UInt8Array *hash) {
+    switch (hasher) {
+    case RSA_HASH_SHA256: {
+        sha256 sha_hasher = sha256_new();
+        sha256_update(&sha_hasher, msg.array, msg.size);
+        u256 msg_digest = sha256_finalize(&sha_hasher);
+        u256_get_bytes_big_endian(hash->array, msg_digest);
+        return;
+    }
+    default:
+        return;
+    };
+}
+
+int try_identify_hasher_by_oid(uint8_t *bytes, int size, RSAHashes *hasher) {
+    int num_oids = sizeof(hash_list) / sizeof(RSAHashEntry);
+
+    for (int i = 0; i < num_oids; i++) {
+        if (size >= hash_list[i].oid_size && memcmp(bytes, hash_list[i].oid, hash_list[i].oid_size) == 0) {
+            *hasher = hash_list[i].function;
+            return 1;
+        }
+    }
+
+    return 0;
+}
