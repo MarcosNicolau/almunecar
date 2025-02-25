@@ -156,10 +156,8 @@ RSAEncryptResult rsa_encrypt_msg_PKCS1v15(UInt8Array msg, RSAPublicKey pub, UInt
     BigUint cipher = biguint_new_heap(limbs_size);
     biguint_pow_mod(em, pub.e, pub.n, &cipher);
 
-    if (buf->size < k) {
-        buf->array = realloc(buf->array, k);
-        buf->size = k;
-    }
+    buf->array = realloc(buf->array, k);
+    buf->size = k;
     biguint_get_bytes_big_endian(cipher, buf->array);
 
     biguint_free(&em, &cipher);
@@ -219,10 +217,8 @@ RSADecryptResult rsa_decrypt_msg_PKCS1v15(RSAKeyPair key_pair, UInt8Array cipher
 
     // the rest is the message
     int msg_size = cipher_bytes.size - ps_len - 3;
-    if (buf->size < msg_size + 1) {
-        buf->array = realloc(buf->array, msg_size + 1);
-        buf->size = msg_size;
-    }
+    buf->array = realloc(buf->array, msg_size + 1);
+    buf->size = msg_size;
     for (int j = 0; j < msg_size; j++) {
         buf->array[j] = em_bytes[i++];
     }
@@ -246,19 +242,19 @@ RSASignResult rsa_sign_PKCS1v15(UInt8Array msg_bytes, RSAKeyPair key_pair, RSAHa
     UInt8Array msg_hash = {.array = malloc(hash_entry.hash_len), .size = hash_entry.hash_len};
     hash_msg(hasher, msg_bytes, &msg_hash);
 
-    UInt8Array t = {};
+    int t_len = hash_entry.oid_size + hash_entry.hash_len;
     uint8_t *t = malloc(hash_entry.oid_size + hash_entry.hash_len);
 
-    int i = 0;
-    for (; i < hash_entry.oid_size; i++)
-        buf->array[i] = hash_entry.oid[i];
+    int m = 0;
+    for (; m < hash_entry.oid_size; m++)
+        t[m] = hash_entry.oid[m];
     for (int j = 0; j < hash_entry.hash_len; j++)
-        buf->array[i++] = msg_hash.array[j];
+        t[m++] = msg_hash.array[j];
 
     free(msg_hash.array);
 
-    if (k < t.size + 11) {
-        free(t.array);
+    if (k < t_len + 11) {
+        free(t);
         return Err(RSASignResult, RSA_MessageTooShort);
     }
 
@@ -267,11 +263,11 @@ RSASignResult rsa_sign_PKCS1v15(UInt8Array msg_bytes, RSAKeyPair key_pair, RSAHa
     int i = 0;
     em_bytes[i++] = 0x00;
     em_bytes[i++] = 0x01;
-    for (; i < k - t.size - 1; i++)
+    for (; i < k - t_len - 1; i++)
         em_bytes[i] = 0xff;
     em_bytes[i++] = 0x00;
-    for (int j = 0; j < t.size; j++)
-        em_bytes[i++] = t.array[j];
+    for (int j = 0; j < t_len; j++)
+        em_bytes[i++] = t[j];
 
     BigUint em = biguint_new_heap(limbs_size);
     biguint_from_bytes_big_endian(em_bytes, &em);
@@ -279,13 +275,11 @@ RSASignResult rsa_sign_PKCS1v15(UInt8Array msg_bytes, RSAKeyPair key_pair, RSAHa
     BigUint signature = biguint_new_heap(limbs_size);
     biguint_pow_mod(em, key_pair.priv.d, key_pair.pub.n, &signature);
 
-    if (buf->size < k) {
-        buf->array = realloc(buf->array, k);
-        buf->size = k;
-    }
+    buf->array = realloc(buf->array, k);
+    buf->size = k;
     biguint_get_bytes_big_endian(signature, buf->array);
 
-    free(t.array);
+    free(t);
     free(em_bytes);
     biguint_free(&signature, &em);
 
