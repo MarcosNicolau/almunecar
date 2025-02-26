@@ -375,13 +375,13 @@ RSAVerificationResult rsa_verify_signature_PKCS1v15(UInt8Array msg, UInt8Array s
     return Ok(RSAVerificationResult, {});
 };
 
-void hash_msg(RSAHashes hasher, UInt8Array msg, UInt8Array *hash) {
+void hash_msg(RSAHashes hasher, UInt8Array msg, UInt8Array *buf) {
     switch (hasher) {
     case RSA_HASH_SHA256: {
         sha256 sha_hasher = sha256_new();
         sha256_update(&sha_hasher, msg.array, msg.size);
-        u256 msg_digest = sha256_finalize(&sha_hasher);
-        u256_get_bytes_big_endian(hash->array, msg_digest);
+        h256 hash = sha256_finalize(&sha_hasher);
+        memcpy(buf->array, hash.digest, 32);
         return;
     }
     default:
