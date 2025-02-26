@@ -27,9 +27,7 @@ void test_random_prime_works() {
     BigUint a = biguint_new_with_limbs(4, {0});
     biguint_random_prime(&a);
 
-    for (int i = 0; i < 4; i++) {
-        assert_that(!biguint_is_zero(a));
-    }
+    assert_that(biguint_is_prime(a) == 1);
 }
 
 int main() {
