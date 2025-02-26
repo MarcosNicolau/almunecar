@@ -118,6 +118,34 @@ void test_signature_tampering() {
     free(signature.array);
 }
 
+void test_full_msg_exchange() {
+    RSAKeyPair alice = rsa_key_pair_new(512);
+    rsa_gen_key_pair(&alice);
+    RSAKeyPair john = rsa_key_pair_new(512);
+    rsa_gen_key_pair(&john);
+
+    // alice wants to share an encrypted message that only john can view
+    char alice_msg = "Hello john, I am crazy in love with you. Kiss me.";
+    UInt8Array alice_msg_bytes = {.array = (uint8_t *)alice_msg, .size = strlen(alice_msg)};
+    UInt8Array cipher = {};
+    UInt8Array signature = {};
+    RSAEncryptResult encrypt_res = rsa_encrypt_msg_PKCS1v15(alice_msg_bytes, john.pub, &cipher);
+    assert_that(encrypt_res.success == 1);
+    RSASignResult sign_res = rsa_sign_PKCS1v15(alice_msg_bytes, alice, RSA_HASH_SHA256, &signature);
+    assert_that(sign_res.success == 1);
+
+    // john wants to make sure the message was indeed from alice and no one tampered it
+    UInt8Array decrypted_msg = {};
+    RSADecryptResult decrypt_res = rsa_decrypt_msg_PKCS1v15(john, cipher, &decrypted_msg);
+    assert_that(decrypt_res.success == 1);
+    RSAVerificationResult verification_res = rsa_verify_signature_PKCS1v15(decrypted_msg, signature, alice.pub);
+    assert_that(verification_res.success == 1);
+
+    free(decrypted_msg.array);
+    free(cipher.array);
+    free(signature.array);
+}
+
 int main() {
     BEGIN_TEST()
     test(test_key_generation);
@@ -126,6 +154,7 @@ int main() {
     test(test_decrypt_with_wrong_key);
     test(test_signing_msg_is_valid);
     test(test_signature_tampering);
+    test(test_full_msg_exchange);
     END_TEST()
 
     return 0;
