@@ -1,4 +1,4 @@
-#include <sha256.h>
+#include <hashes/sha256.h>
 
 /**
  *
@@ -144,17 +144,17 @@ void sha256_update(sha256 *hash, uint8_t *bytes, size_t size) {
     }
 }
 
-u256 sha256_finalize(sha256 *hash) {
-    sha256_apply_padding(hash);
+h256 sha256_finalize(sha256 *hasher) {
+    sha256_apply_padding(hasher);
     // SHA-2 algorithm defines the hash values in big-endian format, but our
     // implementation stores the hash values in little-endian format.
     // we need to convert the hash to big-endian byte order
-    uint8_t bytes[32];
+    h256 hash;
     for (int j = 0; j < 8; ++j) {
         for (int i = 0; i < 4; ++i) {
-            bytes[j * 4 + i] = (hash->h[j] >> (24 - i * 8)) & 0xFF;
+            hash.digest[j * 4 + i] = (hasher->h[j] >> (24 - i * 8)) & 0xFF;
         }
     }
-    u256 digest = u256_from_bytes_big_endian(bytes);
-    return digest;
+
+    return hash;
 };
