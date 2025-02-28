@@ -125,7 +125,7 @@ void test_full_msg_exchange() {
     rsa_gen_key_pair(&john);
 
     // alice wants to share an encrypted message that only john can view
-    char alice_msg = "Hello john, I am crazy in love with you. Kiss me.";
+    char *alice_msg = "Hello john, I am crazy in love with you. Kiss me.";
     UInt8Array alice_msg_bytes = {.array = (uint8_t *)alice_msg, .size = strlen(alice_msg)};
     UInt8Array cipher = {};
     UInt8Array signature = {};
