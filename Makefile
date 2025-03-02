@@ -1,7 +1,7 @@
 # Project settings
 PROJECT_NAME = almunecar
 BUILD_DIR = build
-LIBS = utils primitive-types math hashes digital-signature # List of libraries in dependency order
+LIBS = utils primitive-types math hashes digital-signature elliptic-curves # List of libraries in dependency order
 SRC_DIR = src
 INCLUDE_DIR = include
 TEST_DIR = tests
