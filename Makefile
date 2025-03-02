@@ -36,7 +36,7 @@ help:
 
 build:
 	@for lib in $(LIBS); do \
-		$(MAKE) build_$$lib; \
+		$(MAKE) build_$$lib > /dev/null 2>&1; \
 	done
 
 build_%: 
