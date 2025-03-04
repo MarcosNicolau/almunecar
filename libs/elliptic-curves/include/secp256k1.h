@@ -26,16 +26,21 @@ static uint64_t n[4] = {
 
 #pragma GCC diagnostic pop
 
+#define secp256k1_points_size_in_bits 256
+
 #define secp256k1()                                                                                                    \
-    (EllipticCurve){.p = biguint_new_from_limbs(4, p),                                                                 \
-                    .a = biguint_new_from_limbs(4, a),                                                                 \
-                    .b = biguint_new_from_limbs(4, b),                                                                 \
-                    .g_x = biguint_new_from_limbs(4, g_x),                                                             \
-                    .g_y = biguint_new_from_limbs(4, g_y),                                                             \
-                    .h = biguint_new_from_limbs(4, h),                                                                 \
-                    .n = biguint_new_from_limbs(4, n),                                                                 \
-                    .supports_edward_form = 0,                                                                         \
-                    .supports_montgomery_form = 0,                                                                     \
-                    .default_expression = ShortWeierstrass};
+    (EllipticCurve){                                                                                                   \
+        .p = biguint_new_from_limbs(4, p),                                                                             \
+        .a = biguint_new_from_limbs(4, a),                                                                             \
+        .b = biguint_new_from_limbs(4, b),                                                                             \
+        .g_x = biguint_new_from_limbs(4, g_x),                                                                         \
+        .g_y = biguint_new_from_limbs(4, g_y),                                                                         \
+        .h = biguint_new_from_limbs(4, h),                                                                             \
+        .n = biguint_new_from_limbs(4, n),                                                                             \
+        .supports_edward_form = 0,                                                                                     \
+        .supports_montgomery_form = 0,                                                                                 \
+        .default_expression = ShortWeierstrass,                                                                        \
+        .points_size_in_bits = secp256k1_points_size_in_bits,                                                          \
+    };
 
 #endif

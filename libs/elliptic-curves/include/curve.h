@@ -19,6 +19,7 @@ typedef struct {
     int supports_montgomery_form; // whether the curve can be written in montgomery form
     int supports_edward_form;     // whether the curve can be written in edward form
     CurveExpression default_expression;
+    int points_size_in_bits;
 } EllipticCurve;
 
 #endif
